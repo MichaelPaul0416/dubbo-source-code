@@ -1,0 +1,2 @@
+def=org.apache.dubbo.common.extensionloader.demo.DefaultFrameParser
+spring=org.apache.dubbo.common.extensionloader.demo.SpringParser
