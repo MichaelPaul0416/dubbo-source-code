@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
  * RejectedExecutionException} or an exception thrown by {@linkplain
  * MoreExecutors#sameThreadExecutor inline execution}) will be caught and
  * logged.
+ * 新加入的元素被添加在列表的首位，执行的时候，按照加入的顺序，最先加入的最先执行;但是Listener却不是按照加入的顺序被执行
  */
 public final class ExecutionList {
     // Logger to log exceptions caught when running runnables.

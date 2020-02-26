@@ -21,3 +21,12 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# 所有路径中带target文件夹的
+target/
+
+# ideal生成的所有的iml结尾的
+*.iml
+
+# idea的配置文件夹
+/.idea

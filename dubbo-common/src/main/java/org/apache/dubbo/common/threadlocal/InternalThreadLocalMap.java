@@ -23,9 +23,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The internal data structure that stores the threadLocal variables for Netty and all {@link InternalThread}s.
  * Note that this class is for internal use only. Use {@link InternalThread}
  * unless you know what you are doing.
+ * 分为fast和slow两种模式，如果是fast的话，要求是当前线程必须是{@link InternalThread},并且设置的缓存对象也是维护在{@code InternalThread.InternalThreadLocalMap中}
+ * 如果是slow的话，直接委托给{@code ThreadLocal}处理
  */
 public final class InternalThreadLocalMap {
 
+    /**
+     * InternalThreadMap的实际容器，默认大小是32
+     * 并且，无论以后如何扩容，在执行了InternalThreadLocal#set方法之后，这个容器的index=0的位置，就是一个{@code Set<InternalThreadLocal<?>>}
+     * 这个set保存了待remove的本地变量，对应{@link ThreadLocal#remove()}方法作用
+     * 所以说，每个{@link InternalThread#threadLocalMap} 其内部数组的index=0元素，都维护了当前待移除的{@link InternalThread}的变量值
+     */
     private Object[] indexedVariables;
 
     private static ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = new ThreadLocal<InternalThreadLocalMap>();
@@ -42,10 +50,14 @@ public final class InternalThreadLocalMap {
         return slowThreadLocalMap.get();
     }
 
+    /**
+     * 根据当前线程的具体类型是{@link Thread}还是{@link InternalThread}来判断
+     * @return
+     */
     public static InternalThreadLocalMap get() {
         Thread thread = Thread.currentThread();
         if (thread instanceof InternalThread) {
-            return fastGet((InternalThread) thread);
+            return fastGet((InternalThread) thread);// 如果InternalThread内部的InternalThreadLocalMap为null的话，设置然后返回
         }
         return slowGet();
     }
@@ -95,6 +107,7 @@ public final class InternalThreadLocalMap {
             lookup[index] = value;
             return oldValue == UNSET;
         } else {
+            // 扩容并且设置
             expandIndexedVariableTableAndSet(index, value);
             return true;
         }
@@ -131,16 +144,17 @@ public final class InternalThreadLocalMap {
     }
 
     private static InternalThreadLocalMap fastGet(InternalThread thread) {
+        // InternalThread.InternalThreadLocalMap对象只有通过InternalThread#setThreadLocalMap方法才可以赋值
         InternalThreadLocalMap threadLocalMap = thread.threadLocalMap();
         if (threadLocalMap == null) {
-            thread.setThreadLocalMap(threadLocalMap = new InternalThreadLocalMap());
+            thread.setThreadLocalMap(threadLocalMap = new InternalThreadLocalMap());// 默认大小是32
         }
         return threadLocalMap;
     }
 
     private static InternalThreadLocalMap slowGet() {
         ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = InternalThreadLocalMap.slowThreadLocalMap;
-        InternalThreadLocalMap ret = slowThreadLocalMap.get();
+        InternalThreadLocalMap ret = slowThreadLocalMap.get();// 从本地ThreadLocal里面获取
         if (ret == null) {
             ret = new InternalThreadLocalMap();
             slowThreadLocalMap.set(ret);
@@ -148,6 +162,12 @@ public final class InternalThreadLocalMap {
         return ret;
     }
 
+    /**
+     * 扩容，容量扩大至最接近index的并且大于index的2^n的整数
+     * 如index=19，那么扩容后，结果为32
+     * @param index
+     * @param value
+     */
     private void expandIndexedVariableTableAndSet(int index, Object value) {
         Object[] oldArray = indexedVariables;
         final int oldCapacity = oldArray.length;

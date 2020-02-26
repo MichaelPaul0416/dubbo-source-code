@@ -33,8 +33,13 @@ import java.util.Set;
  */
 public class InternalThreadLocal<V> {
 
+    // 一个类加载器中，这个variablesToRemoveIndex只有一个唯一的值
     private static final int variablesToRemoveIndex = InternalThreadLocalMap.nextVariableIndex();
 
+    /**
+     * 一个{@link InternalThreadLocal} 第几个被创建，如果如果值超过了{@link InternalThreadLocalMap#indexedVariables}的初始大小
+     * 那么在对这个{@link InternalThreadLocal#set(V)}的时候，会先扩容，然后设置
+     */
     private final int index;
 
     public InternalThreadLocal() {
@@ -84,6 +89,11 @@ public class InternalThreadLocal<V> {
         InternalThreadLocalMap.destroy();
     }
 
+    /**
+     * 添加到待移除的列表中
+     * @param threadLocalMap
+     * @param variable
+     */
     @SuppressWarnings("unchecked")
     private static void addToVariablesToRemove(InternalThreadLocalMap threadLocalMap, InternalThreadLocal<?> variable) {
         Object v = threadLocalMap.indexedVariable(variablesToRemoveIndex);
@@ -98,6 +108,11 @@ public class InternalThreadLocal<V> {
         variablesToRemove.add(variable);
     }
 
+    /**
+     * 从待移除的列表中移除
+     * @param threadLocalMap
+     * @param variable
+     */
     @SuppressWarnings("unchecked")
     private static void removeFromVariablesToRemove(InternalThreadLocalMap threadLocalMap, InternalThreadLocal<?> variable) {
 
