@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 /**
  * Endpoint. (API/SPI, Prototype, ThreadSafe)
  *
+ * 抽象接口，进一步抽象client，server，channel具备的一些基础行为
  *
  * @see org.apache.dubbo.remoting.Channel
  * @see org.apache.dubbo.remoting.Client

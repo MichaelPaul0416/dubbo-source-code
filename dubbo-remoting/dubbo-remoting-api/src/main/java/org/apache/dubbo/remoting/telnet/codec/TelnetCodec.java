@@ -64,9 +64,9 @@ public class TelnetCodec extends TransportCodec {
             } else if (attribute instanceof Charset) {
                 return (Charset) attribute;
             }
-            URL url = channel.getUrl();
+            URL url = channel.getUrl();// channel中的charset获取异常，走到这里
             if (url != null) {
-                String parameter = url.getParameter(Constants.CHARSET_KEY);
+                String parameter = url.getParameter(Constants.CHARSET_KEY);// channel中获取异常，就从url中获取
                 if (parameter != null && parameter.length() > 0) {
                     try {
                         return Charset.forName(parameter);

@@ -30,6 +30,8 @@ import javax.sound.midi.Receiver;
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
  * @see org.apache.dubbo.remoting.Transporters
+ *
+ * 传输层，由各个网络框架二次开发实现它的接口，包含了客户端的connect和server的bind两种行为
  */
 @SPI("netty")
 public interface Transporter {
@@ -42,6 +44,7 @@ public interface Transporter {
      * @return server
      * @throws RemotingException
      * @see org.apache.dubbo.remoting.Transporters#bind(URL, Receiver, ChannelHandler)
+     * 如果url中有key名为server或者transporter的键值对，那么就取对应的value值对应的SPI实现，否则的话，使用netty的SPI实现
      */
     @Adaptive({Constants.SERVER_KEY, Constants.TRANSPORTER_KEY})
     Server bind(URL url, ChannelHandler handler) throws RemotingException;

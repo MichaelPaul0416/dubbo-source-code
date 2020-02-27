@@ -1,0 +1,8 @@
+1.dubbo-common
+    主要负责一些基础的功能，不涉及网络等功能。主要是spi的实现和加载机制
+
+2.dubbo-remoting-api
+    涉及到三个SPI接口
+    exchange:
+    transport:涉及一个传输的功能，主要是作为server的bind和作为client的connect
+    telnet:基础的telnet功能，检测服务健康

@@ -29,6 +29,9 @@ public class Transporters {
 
     static {
         // check duplicate jar package
+        /**
+         * 保证入参的类Class在当前的类加载器中唯一
+         */
         Version.checkDuplicate(Transporters.class);
         Version.checkDuplicate(RemotingException.class);
     }

@@ -38,6 +38,7 @@ public class TransportCodec extends AbstractCodec {
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException {
         OutputStream output = new ChannelBufferOutputStream(buffer);
+        // 从channel中获取序列化/反序列化的组件进行操作
         ObjectOutput objectOutput = getSerialization(channel).serialize(channel.getUrl(), output);
         encodeData(channel, objectOutput, message);
         objectOutput.flushBuffer();
