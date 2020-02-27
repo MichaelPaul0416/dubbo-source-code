@@ -198,7 +198,8 @@ public class ExtensionLoader_Adaptive_Test {
         Map<String, String> map = new HashMap<String, String>();
         map.put("ext2", "impl1");
         URL url = new URL("p1", "1.2.3.4", 1010, "path1", map);
-
+        // url -> p1://1.2.3.4:1010/path1?ext2=impl1
+        // 所以只要根据value值【impl1】找到对应名字的spi实现就好了
         UrlHolder holder = new UrlHolder();
         holder.setUrl(url);
 

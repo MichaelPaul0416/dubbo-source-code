@@ -1,0 +1,3 @@
+str=org.apache.dubbo.common.extensionloader.demo.StringProtocol
+netty=org.apache.dubbo.common.extensionloader.demo.NettyProtocol
+def=org.apache.dubbo.common.extensionloader.demo.DefaultNetProtocol

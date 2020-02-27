@@ -666,8 +666,8 @@ public class ExtensionLoader<T> {
         // 因为SPI文件中指定的实现类，不能指定构造器入参，所以这就要求clazz的constructor对象要么只有一个SPI接口作为入参[此时它就是一个wrapper]
         // 或者要么就是无参构造器
         if (clazz.isAnnotationPresent(Adaptive.class)) {//被@Adaptive修饰
-            if (cachedAdaptiveClass == null) {
-                cachedAdaptiveClass = clazz;
+            if (cachedAdaptiveClass == null) {// 一个SPI接口的@Adaptive实现只能有一个
+                cachedAdaptiveClass = clazz;// 指定当前SPI扩展中带@Adaptive的实现类，并且带@Adaptive注解的SPI实现类，不会被添加到SPI接口实现类的缓存中
             } else if (!cachedAdaptiveClass.equals(clazz)) {
                 throw new IllegalStateException("More than 1 adaptive class found: "
                         + cachedAdaptiveClass.getClass().getName()
@@ -846,6 +846,9 @@ public class ExtensionLoader<T> {
                     code.append(s);
                 }
 
+                // 写在URL中的key=spiName，key的值可以在@Adaptive的注解中写值
+                // 如果没有写的话，获取@SPI接口的类名，然后第一个字母小写
+                // Ext2 -> ext2 | FrameParser -> frame.parser
                 String[] value = adaptiveAnnotation.value();
                 // value is not set, use the value generated from class name as the key
                 if (value.length == 0) {

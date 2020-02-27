@@ -57,6 +57,9 @@ public @interface Adaptive {
      * 如果都没有出现，那么就使用SPI默认的extension
      * 如果SPI没有指定value，那么就根据一定的规则，生成一个带名字的extension
      *
+     * 当前注解针对一个{@link SPI}接口，只能一个实现类能用{@link Adaptive}注解修饰，并且这个实现类无法作为spi的实现类被使用，只能作为一个类似于工厂的类
+     * 间接产生对应的{@link SPI}接口
+     *
      * @return parameter key names in URL
      */
     String[] value() default {};
