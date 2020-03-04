@@ -3,6 +3,13 @@
 
 2.dubbo-remoting-api
     涉及到三个SPI接口
-    exchange:
-    transport:涉及一个传输的功能，主要是作为server的bind和作为client的connect
+    exchanger:作用和transporter类似，可以按照名字理解，作为数据交换的对象，处理的对象是ExchangeHandler
+    transporter:涉及一个传输的功能，主要是作为server的bind和作为client的connect，针对的处理对象是ChannelHandler
     telnet:基础的telnet功能，检测服务健康
+    Dispatcher:分发器，主要是将message分发到对应的ChannelHandler中，所以一种分发策略，一般都是结合某一个指定的ChannelHandler实现
+        而且这个ChannelHandler的角色必然是一个包装者，所以一般都是WrappedChannelHandler的实现或者说是ChannelHandlerDelegate的实现
+
+
+    编解码主要是针对协议，一个java对象编码之后可以是另外一个java对象，也可以是byte数组；
+    序列化和反序列化主要是针对数据的传输过程，网络的传输依赖的是字节流，所以需要将java对象最终序列化为byte[]
+    两者针对的对象不同，发挥作用的过程也不同；
