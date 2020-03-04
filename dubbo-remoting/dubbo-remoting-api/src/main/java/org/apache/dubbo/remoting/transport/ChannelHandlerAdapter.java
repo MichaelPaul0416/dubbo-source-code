@@ -21,7 +21,7 @@ import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.RemotingException;
 
 /**
- * ChannelHandlerAdapter.
+ * ChannelHandlerAdapter#给所有的{@link ChannelHandler}的方法一个默认的空实现
  */
 public class ChannelHandlerAdapter implements ChannelHandler {
 

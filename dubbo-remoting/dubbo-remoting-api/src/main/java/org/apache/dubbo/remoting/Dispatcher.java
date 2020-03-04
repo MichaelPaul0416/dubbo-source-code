@@ -24,6 +24,8 @@ import org.apache.dubbo.remoting.transport.dispatcher.all.AllDispatcher;
 
 /**
  * ChannelHandlerWrapper (SPI, Singleton, ThreadSafe)
+ * 分发器，主要的作用还是将一部分工作分发给其他线程池执行
+ * 而持有这些线程池，承担异步执行的一般是{@link org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler}或者它的子类
  */
 @SPI(AllDispatcher.NAME)
 public interface Dispatcher {

@@ -36,6 +36,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * AbstractServer
+ * 主要做的就是打开server，重写reset方法，针对当前server进行一些组件，状态的调整
  */
 public abstract class AbstractServer extends AbstractEndpoint implements Server {
 

@@ -36,10 +36,22 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
 
     protected static final Logger logger = LoggerFactory.getLogger(WrappedChannelHandler.class);
 
+    /**
+     * 属于当前类对象，这个线程池属于所有的类实例共享，protected关键字限制了只有
+     * {@link WrappedChannelHandler}的子类可以调用
+      */
     protected static final ExecutorService SHARED_EXECUTOR = Executors.newCachedThreadPool(new NamedThreadFactory("DubboSharedHandler", true));
 
+    /**
+     * 属于实例的线程池，因为这个本身就是结合{@link org.apache.dubbo.remoting.Dispatcher#dispatch(ChannelHandler, URL)}使用的
+     * 而这个方法的目的就是将message投递到指定的线程池中去，所以作为与{@link org.apache.dubbo.remoting.Dispatcher}的搭配者
+     * 就是要自身拥有一个线程池
+     */
     protected final ExecutorService executor;
 
+    /**
+     * 因为这个类本身就是一个{@link ChannelHandlerDelegate}，是一个包装，所以实际还是要交给实际的ChannelHandler处理
+     */
     protected final ChannelHandler handler;
 
     protected final URL url;
@@ -112,6 +124,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     public ExecutorService getExecutorService() {
         ExecutorService cexecutor = executor;
         if (cexecutor == null || cexecutor.isShutdown()) {
+            // 如果类实例自身的线程池不可用，那么就使用类对象的
             cexecutor = SHARED_EXECUTOR;
         }
         return cexecutor;

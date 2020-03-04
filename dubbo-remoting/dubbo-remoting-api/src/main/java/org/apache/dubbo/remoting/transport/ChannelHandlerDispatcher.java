@@ -27,11 +27,15 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * ChannelListenerDispatcher
+ * 这个类的作用，更加是像一个通知者，通过一个ChannelHandler[他自己]向部分ChannelHandler执行相同的功能
  */
 public class ChannelHandlerDispatcher implements ChannelHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelHandlerDispatcher.class);
 
+    /**
+     * 因为是Dispatcher，所以这个ChannelHandler内部一定是有一个维护其管理的ChannelHandler的列表
+     */
     private final Collection<ChannelHandler> channelHandlers = new CopyOnWriteArraySet<ChannelHandler>();
 
     public ChannelHandlerDispatcher() {

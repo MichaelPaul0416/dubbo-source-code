@@ -34,6 +34,12 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
         super(handler);
     }
 
+    /**
+     * 先decode，然后再交给对应的ChannelHandler处理，也就是这个{@link ChannelHandlerDelegate}实际维护的{@link ChannelHandler}
+     * @param channel
+     * @param message
+     * @throws RemotingException
+     */
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         if (message instanceof Decodeable) {
