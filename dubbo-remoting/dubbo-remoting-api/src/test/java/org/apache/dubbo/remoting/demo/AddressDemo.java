@@ -1,18 +1,16 @@
 package org.apache.dubbo.remoting.demo;
 
-import net.sf.cglib.core.Local;
-import org.apache.dubbo.remoting.Channel;
-import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.Transporters;
 import org.apache.dubbo.remoting.transport.ChannelHandlerAdapter;
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.Socket;
-import java.net.SocketException;
-import java.time.LocalDate;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.*;
 import java.time.LocalDateTime;
 import java.util.Enumeration;
 
@@ -61,5 +59,32 @@ public class AddressDemo {
             e.printStackTrace();
         }
 
+    }
+
+    @Test
+    public void bindAddressToRemote(){
+        try {
+            ServerSocket ss = new ServerSocket();
+            // bind remote address -> failed
+            ss.bind(new InetSocketAddress("192.168.56.102",9999));
+
+            while (true){
+                Socket socket = ss.accept();
+                BufferedReader br = new BufferedReader(new InputStreamReader(new BufferedInputStream(socket.getInputStream()),"UTF-8"));
+                System.out.println(br.readLine());
+
+                socket.getOutputStream().write("hello world".getBytes("UTF-8"));
+                socket.getOutputStream().flush();
+
+                socket.close();
+                break;
+            }
+
+            ss.close();
+        } catch (IOException e) {
+            String s = e.getMessage();
+            Assert.assertEquals("Cannot assign requested address: JVM_Bind",s);
+//            e.printStackTrace();
+        }
     }
 }

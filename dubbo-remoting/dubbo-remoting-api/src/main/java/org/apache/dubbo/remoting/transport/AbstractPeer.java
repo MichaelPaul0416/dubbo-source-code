@@ -28,6 +28,9 @@ import org.apache.dubbo.remoting.RemotingException;
  */
 public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
+    /**
+     * 涉及到通道中数据传输的一些行为，都channelHandler处理
+     */
     private final ChannelHandler handler;
 
     private volatile URL url;
