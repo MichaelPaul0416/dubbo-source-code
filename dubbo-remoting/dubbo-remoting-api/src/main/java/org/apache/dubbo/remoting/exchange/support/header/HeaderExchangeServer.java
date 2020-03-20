@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * ExchangeServerImpl
+ * 包装了一层{@link Server}的实现，额外附加一些功能
  */
 public class HeaderExchangeServer implements ExchangeServer {
 
@@ -257,6 +258,10 @@ public class HeaderExchangeServer implements ExchangeServer {
         if (heartbeat > 0) {
             heartbeatTimer = scheduled.scheduleWithFixedDelay(
                     new HeartBeatTask(new HeartBeatTask.ChannelProvider() {
+                        /**
+                         * 获取所有的channel
+                         * @return
+                         */
                         @Override
                         public Collection<Channel> getChannels() {
                             return Collections.unmodifiableCollection(

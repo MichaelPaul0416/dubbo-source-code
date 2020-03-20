@@ -30,6 +30,10 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeHandler.class);
 
+    /**
+     *
+     * @param handler {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeHandler}
+     */
     public DecodeHandler(ChannelHandler handler) {
         super(handler);
     }
@@ -37,7 +41,7 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
     /**
      * 先decode，然后再交给对应的ChannelHandler处理，也就是这个{@link ChannelHandlerDelegate}实际维护的{@link ChannelHandler}
      * @param channel
-     * @param message
+     * @param message {@link Decodeable}
      * @throws RemotingException
      */
     @Override

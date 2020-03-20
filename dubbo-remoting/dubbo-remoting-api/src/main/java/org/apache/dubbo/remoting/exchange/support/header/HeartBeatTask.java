@@ -56,7 +56,7 @@ final class HeartBeatTask implements Runnable {
                     Long lastWrite = (Long) channel.getAttribute(
                             HeaderExchangeHandler.KEY_WRITE_TIMESTAMP);
                     if ((lastRead != null && now - lastRead > heartbeat)
-                            || (lastWrite != null && now - lastWrite > heartbeat)) {
+                            || (lastWrite != null && now - lastWrite > heartbeat)) {// 时间到了，需要发送心跳
                         Request req = new Request();
                         req.setVersion(Version.getProtocolVersion());
                         req.setTwoWay(true);
@@ -72,7 +72,7 @@ final class HeartBeatTask implements Runnable {
                                 + ", because heartbeat read idle time out: " + heartbeatTimeout + "ms");
                         if (channel instanceof Client) {
                             try {
-                                ((Client) channel).reconnect();
+                                ((Client) channel).reconnect();// 心跳超时，需要重连
                             } catch (Exception e) {
                                 //do nothing
                             }

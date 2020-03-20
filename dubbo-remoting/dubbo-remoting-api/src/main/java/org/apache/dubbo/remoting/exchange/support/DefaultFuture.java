@@ -37,6 +37,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * 使用{@link ReentrantLock}/{@link Condition}完成异步转同步的消息通知
  * DefaultFuture.
  */
 public class DefaultFuture implements ResponseFuture {
@@ -62,7 +63,7 @@ public class DefaultFuture implements ResponseFuture {
     private final Condition done = lock.newCondition();
     private final long start = System.currentTimeMillis();
     private volatile long sent;
-    private volatile Response response;
+    private volatile Response response;// 设置为volatile保证response被设置之后，其他线程马上可见
     private volatile ResponseCallback callback;
 
     public DefaultFuture(Channel channel, Request request, int timeout) {
@@ -130,7 +131,7 @@ public class DefaultFuture implements ResponseFuture {
             lock.lock();
             try {
                 while (!isDone()) {//如果结果没有准备好，就一直循环等待
-                    done.await(timeout, TimeUnit.MILLISECONDS);
+                    done.await(timeout, TimeUnit.MILLISECONDS);// 等待doReceive方法调用Condition#signal方法通知
                     if (isDone() || System.currentTimeMillis() - start > timeout) {//跳出循环的条件是结果已经准备好或者超时
                         break;
                     }
