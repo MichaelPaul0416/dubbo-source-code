@@ -198,7 +198,7 @@ public class HeaderExchangeClient implements ExchangeClient {
         if (heartbeatTimer != null && !heartbeatTimer.isCancelled()) {
             try {
                 heartbeatTimer.cancel(true);
-                scheduled.purge();
+                scheduled.purge();// 移除线程池中所有canceled的任务
             } catch (Throwable e) {
                 if (logger.isWarnEnabled()) {
                     logger.warn(e.getMessage(), e);

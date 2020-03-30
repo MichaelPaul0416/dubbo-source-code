@@ -46,6 +46,7 @@ public class DefaultFuture implements ResponseFuture {
 
     private static final Map<Long, Channel> CHANNELS = new ConcurrentHashMap<Long, Channel>();
 
+    // 当前类加载器中的类对象维护，相当于当前虚拟机中所有的DefaultFuture对象
     private static final Map<Long, DefaultFuture> FUTURES = new ConcurrentHashMap<Long, DefaultFuture>();
 
     static {
@@ -103,7 +104,7 @@ public class DefaultFuture implements ResponseFuture {
         try {
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
-                future.doReceived(response);
+                future.doReceived(response);// 只是把response对象赋值给DefaultFuture的成员变量
             } else {
                 logger.warn("The timeout response finally returned at "
                         + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()))
@@ -167,7 +168,7 @@ public class DefaultFuture implements ResponseFuture {
             invokeCallback(callback);
         } else {
             boolean isdone = false;
-            lock.lock();
+            lock.lock();// 这里加锁的原因在于：防止多线程并发，在设置callback的时候，remote就已经把服务调用的结果返回并且设置了，但是这里并没有发现
             try {
                 if (!isDone()) {
                     this.callback = callback;
@@ -260,11 +261,11 @@ public class DefaultFuture implements ResponseFuture {
     }
 
     private void doReceived(Response res) {
-        lock.lock();
+        lock.lock();// 多线程操作channel获取数据的时候，需要上锁
         try {
             response = res;
             if (done != null) {
-                done.signal();
+                done.signal();// 唤醒在这个实例的condition队列上等待的其他线程
             }
         } finally {
             lock.unlock();
@@ -293,7 +294,7 @@ public class DefaultFuture implements ResponseFuture {
         public void run() {
             while (true) {
                 try {
-                    for (DefaultFuture future : FUTURES.values()) {
+                    for (DefaultFuture future : FUTURES.values()) {// 遍历当前虚拟机中所有的DefaultFuture
                         if (future == null || future.isDone()) {
                             continue;
                         }

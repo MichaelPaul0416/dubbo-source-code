@@ -42,7 +42,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     private static final String CHANNEL_KEY = HeaderExchangeChannel.class.getName() + ".CHANNEL";
 
-    private final Channel channel;
+    private final Channel channel;//消息处理的真实channel，HeaderExchangeChannel只是一个处理头部消息的
 
     private volatile boolean closed = false;
 

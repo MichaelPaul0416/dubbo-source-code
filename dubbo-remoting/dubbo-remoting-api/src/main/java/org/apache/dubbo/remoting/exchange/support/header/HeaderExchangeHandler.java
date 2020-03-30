@@ -76,6 +76,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         }
     }
 
+    // 其实receive事件的处理
     void handleRequest(ExchangeChannel channel, Request req) throws RemotingException {
         Response res = new Response(req.getId(), req.getVersion());
         if (req.isBroken()) {
@@ -95,7 +96,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         Object msg = req.getData();
         try {
             // handle data.
-            CompletableFuture<Object> future = handler.reply(channel, msg);
+            CompletableFuture<Object> future = handler.reply(channel, msg);// future response
             if (future.isDone()) {
                 res.setStatus(Response.OK);
                 res.setResult(future.get());
@@ -104,7 +105,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             }
             future.whenCompleteAsync((result, t) -> {
                 try {
-                    if (t == null) {
+                    if (t == null) {// throwable is null
                         res.setStatus(Response.OK);
                         res.setResult(result);
                     } else {
@@ -156,7 +157,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             channel.setAttribute(KEY_WRITE_TIMESTAMP, System.currentTimeMillis());
             ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
             try {
-                handler.sent(exchangeChannel, message);
+                handler.sent(exchangeChannel, message);// handler将消息message发送到channel【exchangeChannel】中
             } finally {
                 HeaderExchangeChannel.removeChannelIfDisconnected(channel);
             }
@@ -193,7 +194,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                     if (request.isTwoWay()) {
                         handleRequest(exchangeChannel, request);
                     } else {
-                        handler.received(exchangeChannel, request.getData());
+                        handler.received(exchangeChannel, request.getData());// 交给实际的handler处理
                     }
                 }
             } else if (message instanceof Response) {
