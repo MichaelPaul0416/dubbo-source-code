@@ -37,7 +37,7 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
         if (message instanceof MultiMessage) {
             MultiMessage list = (MultiMessage) message;
             for (Object obj : list) {
-                handler.received(channel, obj);
+                handler.received(channel, obj);// 每条消息逐条通知
             }
         } else {
             handler.received(channel, message);

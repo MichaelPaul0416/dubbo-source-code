@@ -39,7 +39,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
     private final URL url;
 
-    private final ChannelHandler handler;
+    private final ChannelHandler handler;// dubbo自带的ChannelHandler，对应Netty的一系列网络事件
 
     public NettyServerHandler(URL url, ChannelHandler handler) {
         if (url == null) {
@@ -58,12 +58,13 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+        NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);// 注册一个NettyChannel
         try {
             if (channel != null) {
+                // 注册远程链接的信息
                 channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
             }
-            handler.connected(channel);
+            handler.connected(channel);// netty的worker线程，处理client连入
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.channel());
         }

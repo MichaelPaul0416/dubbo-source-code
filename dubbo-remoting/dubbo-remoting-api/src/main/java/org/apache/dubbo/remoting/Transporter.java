@@ -30,7 +30,7 @@ import javax.sound.midi.Receiver;
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
  * @see org.apache.dubbo.remoting.Transporters
- *
+ * <p>
  * 传输层，由各个网络框架二次开发实现它的接口，包含了客户端的connect和server的bind两种行为
  */
 @SPI("netty")
@@ -40,7 +40,7 @@ public interface Transporter {
      * Bind a server.
      *
      * @param url     server url
-     * @param handler
+     * @param handler 处理{@link Server}网络事件的{@link ChannelHandler}
      * @return server
      * @throws RemotingException
      * @see org.apache.dubbo.remoting.Transporters#bind(URL, Receiver, ChannelHandler)

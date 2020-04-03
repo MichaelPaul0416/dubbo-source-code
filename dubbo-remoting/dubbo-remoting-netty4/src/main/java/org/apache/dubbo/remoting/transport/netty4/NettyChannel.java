@@ -39,6 +39,10 @@ final class NettyChannel extends AbstractChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyChannel.class);
 
+    /**
+     * 静态，相当于整个虚拟机中的一个{@link Channel}和{@link NettyChannel}的映射关系
+      */
+
     private static final ConcurrentMap<Channel, NettyChannel> channelMap = new ConcurrentHashMap<Channel, NettyChannel>();
 
     private final Channel channel;

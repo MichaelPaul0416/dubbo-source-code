@@ -266,7 +266,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     }
 
     protected void connect() throws RemotingException {
-        connectLock.lock();
+        connectLock.lock();// 这个实例方法，有多个调用方[构造器，重连，发送等]防止这块并发重连，所以这里加上所，并且在方法刚进入的时候，判断是否还连接着
         try {
             if (isConnected()) {
                 return;

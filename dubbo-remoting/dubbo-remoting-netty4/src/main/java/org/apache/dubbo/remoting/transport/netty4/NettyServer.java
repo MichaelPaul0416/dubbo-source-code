@@ -61,6 +61,12 @@ public class NettyServer extends AbstractServer implements Server {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
+    /**
+     *
+     * @param url
+     * @param handler 自定义的{@link ChannelHandler}或者说是{@link org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher}
+     * @throws RemotingException
+     */
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
         super(url, ChannelHandlers.wrap(handler, ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME)));
     }
@@ -74,7 +80,7 @@ public class NettyServer extends AbstractServer implements Server {
                 new DefaultThreadFactory("NettyServerWorker", true));
 
         final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
-        channels = nettyServerHandler.getChannels();
+        channels = nettyServerHandler.getChannels();// 获取所有客户端的链接
 
         bootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
