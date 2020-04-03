@@ -29,8 +29,15 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 
+/**
+ * 运行的容器，先映射到{@link DispatcherServlet}
+ * 然后根据之前的{@link org.apache.dubbo.remoting.http.HttpBinder} 将{@link URL}中的端口与{@link HttpHandler}绑定
+ * 最后当请求到来的时候，由{@link DispatcherServlet}根据{@link HttpServletRequest#getLocalPort()}获取对应的端口
+ * 最后根据端口将请求转发到当初绑定的{@link HttpHandler}上
+ */
 public class TomcatHttpServer extends AbstractHttpServer {
 
     private static final Logger logger = LoggerFactory.getLogger(TomcatHttpServer.class);

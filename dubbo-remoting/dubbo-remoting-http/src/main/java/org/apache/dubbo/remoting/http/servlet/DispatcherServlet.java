@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service dispatcher Servlet.
+ * 绑定了上下文(url-mapping)之后，所有走http协议的都转发到这个{@link HttpServlet}上
+ * 然后根据协议的端口，使用{@link HttpHandler}处理
  */
 public class DispatcherServlet extends HttpServlet {
 
