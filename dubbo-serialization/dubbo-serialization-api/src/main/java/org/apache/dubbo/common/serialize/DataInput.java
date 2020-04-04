@@ -20,6 +20,7 @@ import java.io.IOException;
 
 /**
  * Data input.
+ * 反序列化基本类型和UTF字符集的数据
  */
 public interface DataInput {
 

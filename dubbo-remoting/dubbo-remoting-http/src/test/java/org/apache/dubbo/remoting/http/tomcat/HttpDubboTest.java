@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +32,7 @@ public class HttpDubboTest {
 
             @Override
             public void run() {
-                while (stopCaller.isRun()){
+                while (stopCaller.isRun()) {
                     try {
                         TimeUnit.MILLISECONDS.sleep(30);
                     } catch (InterruptedException e) {
@@ -67,16 +66,37 @@ public class HttpDubboTest {
 
     }
 
+    @Test
+    public void extendRelation(){
+        S s1 = new S();
+        S s2 = new S();
+
+        System.out.println(s1);
+        System.out.println(s2);
+
+    }
+
+    private static class F {
+        protected Object field = new Object();
+    }
+
+    private static class S extends F{
+        @Override
+        public String toString() {
+//            return field.toString();
+            return super.toString();
+        }
+    }
     private static class StopCaller {
         private volatile boolean stop = false;
 
-        public void stopServer(){
-            if(!stop){
+        public void stopServer() {
+            if (!stop) {
                 stop = true;
             }
         }
 
-        public boolean isRun(){
+        public boolean isRun() {
             return !this.stop;
         }
     }

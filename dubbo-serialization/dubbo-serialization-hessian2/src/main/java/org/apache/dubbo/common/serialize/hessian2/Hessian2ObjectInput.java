@@ -25,6 +25,7 @@ import java.lang.reflect.Type;
 
 /**
  * Hessian2 Object input.
+ * 实现反序列化
  */
 public class Hessian2ObjectInput implements ObjectInput {
     private final Hessian2Input mH2i;

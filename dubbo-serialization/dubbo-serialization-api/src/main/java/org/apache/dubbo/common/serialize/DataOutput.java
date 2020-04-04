@@ -20,6 +20,7 @@ import java.io.IOException;
 
 /**
  * Data output.
+ * 序列化基本数据类型
  */
 public interface DataOutput {
 
