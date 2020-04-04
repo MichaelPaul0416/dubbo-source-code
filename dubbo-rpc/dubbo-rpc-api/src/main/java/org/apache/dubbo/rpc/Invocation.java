@@ -24,6 +24,7 @@ import java.util.Map;
  * @serial Don't change the class name and package name.
  * @see org.apache.dubbo.rpc.Invoker#invoke(Invocation)
  * @see org.apache.dubbo.rpc.RpcInvocation
+ * rpc远程调用的时候，相关参数的封装
  */
 public interface Invocation {
 
@@ -77,7 +78,7 @@ public interface Invocation {
 
     /**
      * get the invoker in current context.
-     *
+     * 反向关联{@link Invoker}
      * @return invoker.
      * @transient
      */

@@ -87,7 +87,8 @@ public class RpcUtils {
 
     /**
      * Idempotent operation: invocation id will be added in async operation by default
-     *
+     * 因为如果是异步的话，一般需要一个id来映射当初调用搞得上下文
+     * 所以，如果是异步执行的话，将会为这里的{@link Invocation}设置一个id
      * @param url
      * @param inv
      */
@@ -97,6 +98,12 @@ public class RpcUtils {
         }
     }
 
+    /**
+     * 判断当前的{@link Invocation}是否需要附加id
+     * @param url
+     * @param invocation
+     * @return
+     */
     private static boolean isAttachInvocationId(URL url, Invocation invocation) {
         String value = url.getMethodParameter(invocation.getMethodName(), Constants.AUTO_ATTACH_INVOCATIONID_KEY);
         if (value == null) {

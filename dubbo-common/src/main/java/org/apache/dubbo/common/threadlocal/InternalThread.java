@@ -22,6 +22,7 @@ package org.apache.dubbo.common.threadlocal;
  */
 public class InternalThread extends Thread {
 
+    // 模仿Thread内部持有ThreadLocalMap的引用对象
     private InternalThreadLocalMap threadLocalMap;
 
     public InternalThread() {

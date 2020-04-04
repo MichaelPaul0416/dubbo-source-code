@@ -42,6 +42,9 @@ public class RpcInvocation implements Invocation, Serializable {//rpc调用封�
 
     private Map<String, String> attachments;
 
+    // 对于remote而言，无须知道本地的执行者是谁
+    // 也就是说序列化/反序列化的时候，不需要关心把请求/响应传递过来的是谁，只需要关心数据
+    // 所以这里使用transient关键字修饰
     private transient Invoker<?> invoker;
 
     public RpcInvocation() {

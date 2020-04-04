@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * AbstractInvoker.
+ * rpc调用的执行者
  */
 public abstract class AbstractInvoker<T> implements Invoker<T> {
 
@@ -134,6 +135,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         if (attachment != null && attachment.size() > 0) {
             invocation.addAttachmentsIfAbsent(attachment);
         }
+        // RpcContext -> ThreadLocal
         Map<String, String> contextAttachments = RpcContext.getContext().getAttachments();//RpcContext#getContext底层使用的是ThreadLocal，保证当前线程绑定
         if (contextAttachments != null) {
             /**
@@ -151,6 +153,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
 
 
         try {
+            //各自的子类执行rpc远程调用
             return doInvoke(invocation);
         } catch (InvocationTargetException e) { // biz exception
             Throwable te = e.getTargetException();
