@@ -23,6 +23,7 @@ import org.apache.dubbo.rpc.Invoker;
 
 /**
  * AbstractExporter.
+ * 一个{@link Exporter}对应一个服务接口
  */
 public abstract class AbstractExporter<T> implements Exporter<T> {
 
@@ -53,6 +54,7 @@ public abstract class AbstractExporter<T> implements Exporter<T> {
             return;
         }
         unexported = true;
+        // 当前的服务就不导出了，通过销毁执行
         getInvoker().destroy();
     }
 

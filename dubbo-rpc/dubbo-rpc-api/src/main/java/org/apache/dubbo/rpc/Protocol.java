@@ -53,8 +53,10 @@ public interface Protocol {
      * Refer a remote service: <br>
      * 1. When user calls `invoke()` method of `Invoker` object which's returned from `refer()` call, the protocol
      * needs to correspondingly execute `invoke()` method of `Invoker` object <br>
+     *     通过{@link Protocol#refer(Class, URL)}返回{@link Invoker}对象
      * 2. It's protocol's responsibility to implement `Invoker` which's returned from `refer()`. Generally speaking,
      * protocol sends remote request in the `Invoker` implementation. <br>
+     *      协议通过{@link Invoker}的实现去发送远程请求
      * 3. When there's check=false set in URL, the implementation must not throw exception but try to recover when
      * connection fails.
      *
