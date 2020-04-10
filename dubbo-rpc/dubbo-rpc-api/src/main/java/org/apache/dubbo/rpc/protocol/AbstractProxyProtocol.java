@@ -31,12 +31,15 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
+ * 主要作用还是通过{@link ProxyFactory#getProxy(Invoker, boolean)}/{@link ProxyFactory#getInvoker(Object, Class, URL)}
+ * 返回服务export/refer的代理对象
  * AbstractProxyProtocol
  */
 public abstract class AbstractProxyProtocol extends AbstractProtocol {
 
     private final List<Class<?>> rpcExceptions = new CopyOnWriteArrayList<Class<?>>();
 
+    // 代理工厂
     private ProxyFactory proxyFactory;
 
     public AbstractProxyProtocol() {
@@ -69,6 +72,7 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
             return exporter;
         }
         final Runnable runnable = doExport(proxyFactory.getProxy(invoker, true), invoker.getInterface(), invoker.getUrl());
+        // 将代理的Invoker对象，包装成AbstractExporter，作为代理协议的export方法返回
         exporter = new AbstractExporter<T>(invoker) {
             @Override
             public void unexport() {
@@ -139,6 +143,14 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
 
     protected abstract <T> Runnable doExport(T impl, Class<T> type, URL url) throws RpcException;
 
+    /**
+     * 返回远程rpc服务，调用的代理对象
+     * @param type
+     * @param url
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     protected abstract <T> T doRefer(Class<T> type, URL url) throws RpcException;
 
 }

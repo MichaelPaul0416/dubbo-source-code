@@ -41,6 +41,7 @@ public interface Protocol {
      * export the same URL<br>
      * 3. Invoker instance is passed in by the framework, protocol needs not to care <br>
      *
+     * 主要功能就是将服务接口的执行者{@link Invoker}进行导出，目的是将服务接口暴露，进行远程调用，所以返回一个{@link Exporter}
      * @param <T>     Service type
      * @param invoker Service invoker
      * @return exporter reference for exported service, useful for unexport the service later
@@ -59,7 +60,7 @@ public interface Protocol {
      *      协议通过{@link Invoker}的实现去发送远程请求
      * 3. When there's check=false set in URL, the implementation must not throw exception but try to recover when
      * connection fails.
-     *
+     * RPC调用方，不是服务的暴露方
      * @param <T>  Service type
      * @param type Service class
      * @param url  URL address for the remote service

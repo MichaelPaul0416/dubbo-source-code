@@ -40,7 +40,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<String, Exporter<?>>();
 
-    //TODO SOFEREFENCE
+    //TODO SOFEREFENCE 包含这个protocol的所有Invoker
     protected final Set<Invoker<?>> invokers = new ConcurrentHashSet<Invoker<?>>();
 
     protected static String serviceKey(URL url) {
@@ -55,6 +55,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     @Override
     public void destroy() {
+        // 销毁Invoker
         for (Invoker<?> invoker : invokers) {
             if (invoker != null) {
                 invokers.remove(invoker);
@@ -68,6 +69,7 @@ public abstract class AbstractProtocol implements Protocol {
                 }
             }
         }
+        // 已暴露的接口，进行取消暴露
         for (String key : new ArrayList<String>(exporterMap.keySet())) {
             Exporter<?> exporter = exporterMap.remove(key);
             if (exporter != null) {
