@@ -97,6 +97,10 @@ public class NioServer extends AbstractServer implements Server {
             iterator.remove();
             int index = this.counter.getAndAdd(1);
 
+            /**
+             * {@link ServerSocketChannel}的感兴趣事件是ACCEPT
+             * 其他的{@link SocketChannel}的感兴趣事件是READ
+             */
             // 新链接
             if (key.isAcceptable()) {
                 ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
@@ -107,13 +111,26 @@ public class NioServer extends AbstractServer implements Server {
 
                 // register event
                 socketChannel.register(this.selector, SelectionKey.OP_READ);
+                // 执行链接建立的事件
                 this.workers[index].execute(new Runnable() {
                     @Override
                     public void run() {
                         // fire
+                        try {
+                            // 进来这里的必定是客户端链接,所以这里的runnable直接触发链接事件
+                            nioChannel.getChannelHandler().connected(nioChannel);
+                        } catch (RemotingException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             }
+            // 进来这里的必定是client发送到server的数据,所以这里出发可读
+            if(key.isReadable()){
+                SocketChannel channel = (SocketChannel) key.channel();
+                // 先找找看是否有存在的NioChannel,有的话直接发送事件,没的话说明channel可能被移除了,所以下一步需要判断,socketChannel是否还链接,连着的话再构建channel然后可读事件
+            }
+
         }
     }
 
