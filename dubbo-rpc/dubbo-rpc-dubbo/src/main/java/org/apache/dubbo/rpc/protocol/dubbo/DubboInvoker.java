@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * DubboInvoker
+ * 执行rpc的对象，对于rpc调用过程中的{@link org.apache.dubbo.remoting.Client}来说
  */
 public class DubboInvoker<T> extends AbstractInvoker<T> {
 
@@ -76,7 +77,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         if (clients.length == 1) {
             currentClient = clients[0];
         } else {
-            currentClient = clients[index.getAndIncrement() % clients.length];
+            currentClient = clients[index.getAndIncrement() % clients.length];// client的寻找策略
         }
         try {
             boolean isAsync = RpcUtils.isAsync(getUrl(), invocation);
@@ -100,6 +101,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 return result;
             } else {
                 RpcContext.getContext().setFuture(null);
+                // netty的异步调用，再get方法中同步获取结果
                 return (Result) currentClient.request(inv, timeout).get();//HeadExchangerClient#request，request方法返回的是ResponseFuture[实际是DefaultFuture]
             }
         } catch (TimeoutException e) {

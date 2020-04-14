@@ -65,7 +65,9 @@ public class DubboProtocol extends AbstractProtocol {
     public static final int DEFAULT_PORT = 20880;
     private static final String IS_CALLBACK_SERVICE_INVOKE = "_isCallBackServiceInvoke";
     private static DubboProtocol INSTANCE;
+    // 当前协议的ExchangeServer
     private final Map<String, ExchangeServer> serverMap = new ConcurrentHashMap<String, ExchangeServer>(); // <host:port,Exchanger>
+    // 当前协议的ExchangeClient
     private final Map<String, ReferenceCountExchangeClient> referenceClientMap = new ConcurrentHashMap<String, ReferenceCountExchangeClient>(); // <host:port,Exchanger>
     private final ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap = new ConcurrentHashMap<String, LazyConnectExchangeClient>();
     private final ConcurrentMap<String, Object> locks = new ConcurrentHashMap<String, Object>();
@@ -203,8 +205,8 @@ public class DubboProtocol extends AbstractProtocol {
         InetSocketAddress address = channel.getRemoteAddress();
         URL url = channel.getUrl();
         return url.getPort() == address.getPort() &&
-                NetUtils.filterLocalHost(channel.getUrl().getIp())
-                        .equals(NetUtils.filterLocalHost(address.getAddress().getHostAddress()));
+                NetUtils.filterLocalHost(channel.getUrl().getIp())// channel 中的url其实就是client需要链接的server的资源定位符
+                        .equals(NetUtils.filterLocalHost(address.getAddress().getHostAddress()));// channel的ip和remote address的ip相等的话，说明是client
     }
 
     Invoker<?> getInvoker(Channel channel, Invocation inv) throws RemotingException {
@@ -282,12 +284,12 @@ public class DubboProtocol extends AbstractProtocol {
                 synchronized (this) {
                     server = serverMap.get(key);
                     if (server == null) {
-                        serverMap.put(key, createServer(url));
+                        serverMap.put(key, createServer(url));// 服务端ip:port -> ExchangeServer
                     }
                 }
             } else {
                 // server supports reset, use together with override
-                server.reset(url);
+                server.reset(url);// 还原之前设置的一部分值
             }
         }
     }
@@ -305,7 +307,7 @@ public class DubboProtocol extends AbstractProtocol {
         url = url.addParameter(Constants.CODEC_KEY, DubboCodec.NAME);
         ExchangeServer server;
         try {
-            server = Exchangers.bind(url, requestHandler);
+            server = Exchangers.bind(url, requestHandler);// Exchanger -> ExchangeServer -> NettyServer -> DecodeHandler -> HeadExchangeHandler -> ExchangeHandler
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
         }
@@ -354,13 +356,19 @@ public class DubboProtocol extends AbstractProtocol {
     }
 
     @Override
-    public <T> Invoker<T> refer(Class<T> serviceType, URL url) throws RpcException {
+    public <T> Invoker<T> refer(Class<T> serviceType, URL url) throws RpcException {// 引用远程服务
         optimizeSerialization(url);
         // create rpc invoker.
         DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
         invokers.add(invoker);
         return invoker;
     }
+
+    /**
+     * 对应{@link #export}方法作为server返回的{@link ExchangeServer},{@link #refer}作为client需要返回{@link ExchangeClient}
+     * @param url
+     * @return
+     */
     //获取invoker执行的连接
     private ExchangeClient[] getClients(URL url) {
         // whether to share connection
@@ -385,27 +393,28 @@ public class DubboProtocol extends AbstractProtocol {
 
     /**
      * Get shared connection
+     * 返回的是带计数器功能的{@link ReferenceCountExchangeClient},统计当前{@link ExchangeClient}被使用的次数
      */
     private ExchangeClient getSharedClient(URL url) {
         String key = url.getAddress();
         ReferenceCountExchangeClient client = referenceClientMap.get(key);
         if (client != null) {
             if (!client.isClosed()) {
-                client.incrementAndGetCount();
+                client.incrementAndGetCount();// Client复用，计数器+1
                 return client;
             } else {
                 referenceClientMap.remove(key);
             }
         }
 
-        locks.putIfAbsent(key, new Object());
+        locks.putIfAbsent(key, new Object());// 分段锁的思想，不同的key不同的锁
         synchronized (locks.get(key)) {//锁住对一个host:port的请求，也就是一个管道中
             if (referenceClientMap.containsKey(key)) {
                 return referenceClientMap.get(key);
             }
 
             ExchangeClient exchangeClient = initClient(url);
-            client = new ReferenceCountExchangeClient(exchangeClient, ghostClientMap);
+            client = new ReferenceCountExchangeClient(exchangeClient, ghostClientMap);// 装饰器模式，带技术功能的ExchangeClient
             referenceClientMap.put(key, client);
             ghostClientMap.remove(key);
             locks.remove(key);
@@ -415,6 +424,7 @@ public class DubboProtocol extends AbstractProtocol {
 
     /**
      * Create new connection
+     * 直接构建一个{@link ExchangeClient}
      */
     private ExchangeClient initClient(URL url) {
 

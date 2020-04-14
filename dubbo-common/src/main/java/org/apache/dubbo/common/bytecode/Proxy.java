@@ -123,7 +123,7 @@ public abstract class Proxy {
 
                 if (value == PendingGenerationMarker) {//只需要有一个生成目标代理类的线程即可
                     try {
-                        cache.wait();
+                        cache.wait();// 如果有多个线程请求生成相同接口的代理类，那么只需要有一个线程生成就可以，其他的引用缓存实例对象
                     } catch (InterruptedException e) {
                     }
                 } else {

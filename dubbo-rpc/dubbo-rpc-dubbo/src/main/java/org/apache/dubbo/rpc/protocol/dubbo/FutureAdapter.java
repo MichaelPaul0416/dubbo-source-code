@@ -40,6 +40,7 @@ public class FutureAdapter<V> extends CompletableFuture<V> {
         future.setCallback(new ResponseCallback() {
             @Override
             public void done(Object response) {
+                // rpc返回调用结果的时候，调用这个方法，然后将返回值设置到当前的FutureAdapter中
                 Result result = (Result) response;
                 V value = null;
                 try {

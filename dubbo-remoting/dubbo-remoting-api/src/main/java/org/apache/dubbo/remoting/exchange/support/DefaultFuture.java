@@ -146,7 +146,7 @@ public class DefaultFuture implements ResponseFuture {
                 throw new TimeoutException(sent > 0, channel, getTimeoutMessage(false));
             }
         }
-        return returnFromResponse();
+        return returnFromResponse();// 返回rpc调用结果或者RpcException
     }
 
     public void cancel() {
