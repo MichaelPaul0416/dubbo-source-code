@@ -1,5 +1,8 @@
 package org.apache.dubbo.rpc.demo;
 
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
+
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -18,21 +21,28 @@ class NioWorker implements Runnable {
         this.shutdown = true;
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(NioWorker.class);
+
     @Override
     public void run() {
-        while (!shutdown) {
+        while (!shutdown && workTasks.size() == 0) {
             try {
                 Runnable task = workTasks.take();
                 task.run();
             } catch (InterruptedException e) {
-                System.out.println("获取执行任务异常，被中断");
+                logger.error("获取执行任务异常，被中断");
             } catch (Throwable throwable) {
-                System.out.println("NioWorker 执行异常 ：" + throwable.getMessage());
+                logger.error("NioWorker 执行异常 ：" + throwable.getMessage());
             }
         }
     }
 
-    public boolean execute(Runnable runnable){
+    public boolean execute(Runnable runnable) {
         return this.workTasks.offer(runnable);
+    }
+
+    public void shutdownNow() {
+        this.workTasks.clear();
+        this.shutdown = true;
     }
 }

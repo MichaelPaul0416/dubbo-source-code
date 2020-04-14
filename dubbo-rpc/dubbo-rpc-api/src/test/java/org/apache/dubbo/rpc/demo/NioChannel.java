@@ -2,6 +2,8 @@ package org.apache.dubbo.rpc.demo;
 
 import com.alibaba.fastjson.JSONObject;
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.RemotingException;
@@ -14,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: wangqiang20995
@@ -27,21 +30,34 @@ public class NioChannel implements Channel {
     private final SocketChannel socketChannel;
     private final Map<String, Object> channelAttr = new ConcurrentHashMap<>(8);
     private final URL url;
-    private final Class<?> clazz;
+
     private final ChannelHandler nioChannelHandler;
     private final AbstractPeer peer;
 
-    public NioChannel(ChannelHandler channelHandler, SocketChannel socketChannel, Class<?> clazz,AbstractPeer peer) {
+    private final AtomicInteger counter = new AtomicInteger(0);
+
+    private static final Logger logger = LoggerFactory.getLogger(NioChannel.class);
+
+    private int calculate() {
+        int num = counter.getAndIncrement();
+        if (num < 0) {
+            counter.set(0);
+            return 0;
+        }
+        return num;
+    }
+
+    public NioChannel(ChannelHandler channelHandler, SocketChannel socketChannel, AbstractPeer peer) {
         this.socketChannel = socketChannel;
-        this.clazz = clazz;
         InetSocketAddress ias = getRemoteAddress();
-        this.url = new URL(PROTOCOL, ias.getHostString(), ias.getPort(), this.clazz.getName());
+        String path = SocketChannel.class.getName() + "-" + calculate();
+        this.url = new URL(PROTOCOL, ias.getHostString(), ias.getPort(), path);
         this.nioChannelHandler = channelHandler;
         this.peer = peer;
 
     }
 
-    public ChannelHandler channelHandler(){
+    public ChannelHandler channelHandler() {
         return this.nioChannelHandler;
     }
 
@@ -59,8 +75,8 @@ public class NioChannel implements Channel {
             SocketAddress address = this.socketChannel.getRemoteAddress();
             return (InetSocketAddress) address;
         } catch (IOException e) {
-            System.out.println("获取远程地址异常:" + e.getMessage());
-            throw new RuntimeException("获取远程地址异常:" + e.getMessage());
+            logger.error("error while get remote address:" + e.getMessage(),e);
+            throw new RuntimeException("error while get remote address", e);
         }
     }
 
@@ -104,14 +120,14 @@ public class NioChannel implements Channel {
         try {
             return (InetSocketAddress) this.socketChannel.getLocalAddress();
         } catch (IOException e) {
-            System.out.println("获取本地地址信息异常:" + e.getMessage());
+            logger.error("获取本地地址信息异常:" + e.getMessage(),e);
             throw new RuntimeException("获取本地地址信息异常", e);
         }
     }
 
     @Override
     public void send(Object message) throws RemotingException {
-        send(message,false);
+        send(message, false);
     }
 
     @Override
@@ -129,7 +145,7 @@ public class NioChannel implements Channel {
         try {
             this.socketChannel.close();
         } catch (IOException e) {
-            System.out.println("关闭链路异常:" + getRemoteAddress() + "/" + e.getMessage());
+            logger.error("关闭链路异常:" + getRemoteAddress() + "/" + e.getMessage());
         }
     }
 
@@ -148,7 +164,7 @@ public class NioChannel implements Channel {
         return !this.socketChannel.isConnected();
     }
 
-    public static boolean basicType(Object message){
+    public static boolean basicType(Object message) {
         return message instanceof String || message instanceof Long || message instanceof Short
                 || message instanceof Double || message instanceof Float || message instanceof Character
                 || message instanceof Byte || message instanceof Boolean || message instanceof Integer;

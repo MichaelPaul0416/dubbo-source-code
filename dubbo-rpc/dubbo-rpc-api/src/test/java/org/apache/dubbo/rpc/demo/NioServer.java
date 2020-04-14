@@ -1,6 +1,8 @@
 package org.apache.dubbo.rpc.demo;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.RemotingException;
@@ -9,6 +11,7 @@ import org.apache.dubbo.remoting.transport.AbstractServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -35,6 +38,8 @@ public class NioServer extends AbstractServer implements Server {
 
     private final NioWorker[] workers = new NioWorker[8];
 
+    private static final Logger logger = LoggerFactory.getLogger(NioServer.class);
+
     private final ExecutorService fixedWorkerPool = Executors.newFixedThreadPool(8, new ThreadFactory() {
 
         private final AtomicInteger threadNum = new AtomicInteger(0);
@@ -57,9 +62,6 @@ public class NioServer extends AbstractServer implements Server {
         }
     }
 
-    private final ExecutorService handlerWorker = new ThreadPoolExecutor(8, 100, 600,
-            TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000));
-
     @Override
     protected void doOpen() throws Throwable {
         this.selector = Selector.open();
@@ -75,8 +77,7 @@ public class NioServer extends AbstractServer implements Server {
                     try {
                         serverSelect();
                     } catch (IOException e) {
-                        System.out.println("receive client socket error:" + e.getMessage());
-                        e.printStackTrace();
+                        logger.error(e.getMessage(), e);
                     }
                 }
             }
@@ -103,64 +104,80 @@ public class NioServer extends AbstractServer implements Server {
              */
             // 新链接
             if (key.isAcceptable()) {
-                ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-                SocketChannel socketChannel = serverSocketChannel.accept();
-                socketChannel.configureBlocking(false);
-                NioChannel nioChannel = new NioChannel(NioServer.this.getChannelHandler(), socketChannel, NioChannel.class, NioServer.this);
-                NioServer.this.clientChannels.put(address((InetSocketAddress) socketChannel.getRemoteAddress()), nioChannel);
-
-                // register event
-                socketChannel.register(this.selector, SelectionKey.OP_READ);
-                // 执行链接建立的事件
-                this.workers[index].execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        // fire
-                        try {
-                            // 进来这里的必定是客户端链接,所以这里的runnable直接触发链接事件
-                            nioChannel.getChannelHandler().connected(nioChannel);
-                        } catch (RemotingException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                acceptClient(key, this.workers[index]);
             }
             // 进来这里的必定是client发送到server的数据,所以这里出发可读
-            if(key.isReadable()){
-                SocketChannel channel = (SocketChannel) key.channel();
-                // 先找找看是否有存在的NioChannel,有的话直接发送事件,没的话说明channel可能被移除了,所以下一步需要判断,socketChannel是否还链接,连着的话再构建channel然后可读事件
-            }
-
-        }
-    }
-
-    /**
-     * 来一个链接，由一个线程单独处理
-     */
-    private static class Worker implements Runnable {
-
-        private NioChannel nioChannel;
-
-        private Selector selector;
-
-        public Worker(Selector selector) {
-            this.selector = selector;
-        }
-
-        @Override
-        public void run() {
-            for (SelectionKey key : selector.selectedKeys()) {
-                try {
-                    switch (key.readyOps()) {
-                        case SelectionKey.OP_CONNECT:
-                            this.nioChannel.channelHandler().connected(this.nioChannel);
-                    }
-                } catch (RemotingException e) {
-
+            if (key.isReadable()) {
+                if (readFromChannel(key, index)) {
+                    continue;
                 }
             }
         }
     }
+
+    private boolean readFromChannel(SelectionKey key, int index) throws IOException {
+        SocketChannel channel = (SocketChannel) key.channel();
+        // 先找找看是否有存在的NioChannel,有的话直接发送事件,没的话说明channel可能被移除了,所以下一步需要判断,socketChannel是否还链接,连着的话再构建channel然后可读事件
+        String cacheKey = address((InetSocketAddress) channel.getRemoteAddress());
+        NioChannel nChannel;
+        if (clientChannels.containsKey(cacheKey)) {
+            nChannel = (NioChannel) clientChannels.get(cacheKey);
+        } else {
+            if (channel.isConnected()) {
+                nChannel = new NioChannel(NioServer.this.getChannelHandler(), channel, NioServer.this);
+            } else {
+                logger.info("channel:" + channel.getRemoteAddress() + " closed");
+                channel.close();
+                return true;
+            }
+        }
+        if (nChannel != null) {
+            NioChannel finalNChannel = nChannel;
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            try {
+                if (channel.read(buffer) < 0) {
+                    channel.close();
+                    key.cancel();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            byte[] data = buffer.array();
+            this.workers[index].execute(() -> {
+                try {
+                    finalNChannel.getChannelHandler().received(finalNChannel, data);
+                } catch (RemotingException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        return false;
+    }
+
+    private void acceptClient(SelectionKey key, NioWorker worker) throws IOException {
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel = serverSocketChannel.accept();
+        socketChannel.configureBlocking(false);
+        NioChannel nioChannel = new NioChannel(NioServer.this.getChannelHandler(), socketChannel, NioServer.this);
+        NioServer.this.clientChannels.put(address((InetSocketAddress) socketChannel.getRemoteAddress()), nioChannel);
+
+        // register event
+        socketChannel.register(this.selector, SelectionKey.OP_READ);
+        // 执行链接建立的事件
+        worker.execute(new Runnable() {
+            @Override
+            public void run() {
+                // fire
+                try {
+                    // 进来这里的必定是客户端链接,所以这里的runnable直接触发链接事件
+                    nioChannel.getChannelHandler().connected(nioChannel);
+                } catch (RemotingException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
 
     @Override
     protected void doClose() throws Throwable {
@@ -169,11 +186,14 @@ public class NioServer extends AbstractServer implements Server {
                 try {
                     v.close();
                 } catch (Throwable e) {
-                    System.out.println("error:" + e.getMessage());
-                    e.printStackTrace();
+                    logger.error(e.getMessage(),e);
                 }
             }
         });
+
+        for (NioWorker worker : this.workers) {
+            worker.shutdownNow();
+        }
 
         this.clientChannels.clear();
         this.ssc.close();
