@@ -32,7 +32,7 @@ class NioWorker implements Runnable {
             } catch (InterruptedException e) {
                 logger.error("获取执行任务异常，被中断");
             } catch (Throwable throwable) {
-                logger.error("NioWorker 执行异常 ：" + throwable.getMessage());
+                logger.error("NioWorker call error:" + throwable.getMessage());
             }
         }
     }

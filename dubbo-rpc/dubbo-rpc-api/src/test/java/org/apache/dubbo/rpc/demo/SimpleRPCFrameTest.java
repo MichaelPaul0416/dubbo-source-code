@@ -7,6 +7,9 @@ import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.RemotingException;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * @Author: wangqiang20995
  * @Date: 2020/4/13 13:46
@@ -19,7 +22,7 @@ public class SimpleRPCFrameTest {
     private static final Logger logger = LoggerFactory.getLogger(SimpleRPCFrameTest.class);
 
     public static void main(String[] args){
-        URL bind = new URL(NioChannel.PROTOCOL,"127.0.0.1",9090,"nio-server-rpc");
+        URL bind = new URL(NioChannel.PROTOCOL,"localhost",9090,"nio-server-rpc");
         try {
             socketTransporter.bind(bind, new ChannelHandler() {
                 @Override
@@ -41,7 +44,10 @@ public class SimpleRPCFrameTest {
                 @Override
                 public void received(Channel channel, Object message) throws RemotingException {
                     logger.info("receive message from remote:" + channel.getRemoteAddress());
-                    logger.info(message.toString());
+                    byte[] ary = (byte[]) message;
+                    logger.info(new String(ary));
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    channel.send("server time:"+sdf.format(new Date()));
                 }
 
                 @Override
