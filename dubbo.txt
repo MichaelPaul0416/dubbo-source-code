@@ -1,7 +1,7 @@
 1.dubbo-common
     主要负责一些基础的功能，不涉及网络等功能。主要是spi的实现和加载机制
 
-2.dubbo-remoting-api
+2.dubbo-remoting-api(dubbo通讯相关的一些抽象，使用不同的通讯框架进行通讯)
     涉及到三个SPI接口
     exchanger:作用和transporter类似，可以按照名字理解，作为数据交换的对象，处理的对象是ExchangeHandler
     transporter:涉及一个传输的功能，主要是作为server的bind和作为client的connect，针对的处理对象是ChannelHandler
@@ -13,3 +13,24 @@
     编解码主要是针对协议，一个java对象编码之后可以是另外一个java对象，也可以是byte数组；
     序列化和反序列化主要是针对数据的传输过程，网络的传输依赖的是字节流，所以需要将java对象最终序列化为byte[]
     两者针对的对象不同，发挥作用的过程也不同；
+
+3.dubbo-serialization 序列化/反序列化相关的模块，主要是使用Hessian2进行相关的序列化
+    Serialization接口：根据输入输出流，获取序列化/反序列化的对象
+    DataInput/DataOutput：基本数据类型的反序列化/序列化功能接口
+    ObjectInput/ObjectOutput：反序列化/序列化对象
+
+4.dubbo-rpc(定制不同的协议，使用dubbo-remoting模块进行远程通讯，并且抽象rpc的一些对象和过程)
+    Exporter -> Invoker -> Invocation
+    服务暴露者Exporter 返回暴露这个服务的执行者 Invoker ，同时Invoker又需要依赖服务的参数对象Invocation
+    4.1 dubbo-rpc-api
+        服务导出:Exporter 一个服务接口对应一个Invoker,同时这个暴露这个服务接口的Exporter又持有这个服务接口的远程调用者Invoker
+        rpc调用:Invoker
+            #invoke(Invocation) 根据条件Invocation执行远程调用
+            #getInterface() 获取作为服务暴露的提供远程调用的接口类型
+        rpc数据封装:Invocation
+
+    Protocol接口负责rpc接口的暴露export和引入refer
+        export接口，需要一个rpc接口的Invoker<T>,返回的是exporter，在这个接口里面，完成了服务的暴露，server绑定端口注册，ExchangeServer的注册绑定
+        refer接口，需要一个rpc接口类和url[标识目标服务在哪个网络地址上]，返回一个Invoker<?>，然后通过ProxyFactory#getProxy(Invoker<T>)返回代理对象proxy；在这个接口完成了ExchangeClient的初始化和对远程server的链接
+        所以总的来说 Invoker<T>这个对象存在的意义就是远程调用的执行者。
+        对客户端来说，通过Protocol#refer获取Invoker执行者，然后再将其作为参数使用ProxyFactory进行代理，做一些拦截操作;如果不需要代理proxy对象，也可以直接通过refer获取的Invoker对象直接调用
