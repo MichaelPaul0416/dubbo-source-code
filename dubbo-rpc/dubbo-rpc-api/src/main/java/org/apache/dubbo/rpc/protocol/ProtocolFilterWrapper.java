@@ -47,9 +47,20 @@ public class ProtocolFilterWrapper implements Protocol {
         Invoker<T> last = invoker;
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
         if (!filters.isEmpty()) {
-            for (int i = filters.size() - 1; i >= 0; i--) {
+            for (int i = filters.size() - 1; i >= 0; i--) {// 获取的Filter从后往前遍历
                 final Filter filter = filters.get(i);
                 final Invoker<T> next = last;
+                // 构建一个组合了Filter的Invoker，同时这个Invoker指向下一个Invoker
+                /**
+                 * 假设一共有n个{@link Filter},入参{@link Invoker}为invoker-1
+                 * 最后的构造好的执行链应该是这样的
+                 * invoker-1 = invoker-0 + filter-n
+                 * invoker-2 = invoker-1 + filter-(n-1)
+                 * ......
+                 * invoker-n = invoker-(n-1) + filter-1
+                 *
+                 * 然后执行链是 invoker-n -> invoker-(n-1) -> ...... -> invoker-1 -> invoker-0[入参的{@link Invoker}]
+                 */
                 last = new Invoker<T>() {
 
                     @Override
@@ -69,6 +80,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
                     @Override
                     public Result invoke(Invocation invocation) throws RpcException {
+                        // 当前Filter+当前Invoker
                         return filter.invoke(next, invocation);
                     }
 

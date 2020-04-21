@@ -34,3 +34,18 @@
         refer接口，需要一个rpc接口类和url[标识目标服务在哪个网络地址上]，返回一个Invoker<?>，然后通过ProxyFactory#getProxy(Invoker<T>)返回代理对象proxy；在这个接口完成了ExchangeClient的初始化和对远程server的链接
         所以总的来说 Invoker<T>这个对象存在的意义就是远程调用的执行者。
         对客户端来说，通过Protocol#refer获取Invoker执行者，然后再将其作为参数使用ProxyFactory进行代理，做一些拦截操作;如果不需要代理proxy对象，也可以直接通过refer获取的Invoker对象直接调用
+
+    Filter接口的定义和使用
+        Filter接口就是在Invoker#invoke(Invocation)的之前或者之后执行，添加额外的功能
+        主要是通过ProtocolFilterWrapper#export/refer这两个方法，结合SPI文件中配置的Filter的过滤链，进行Filter+Invoker的构造
+        结构如下
+            /**
+             * 假设一共有n个{@link Filter},入参{@link Invoker}为invoker-1
+             * 最后的构造好的执行链应该是这样的
+             * invoker-1 = invoker-0 + filter-n
+             * invoker-2 = invoker-1 + filter-(n-1)
+             * ......
+             * invoker-n = invoker-(n-1) + filter-1
+             *
+             * 然后执行链是 invoker-n -> invoker-(n-1) -> ...... -> invoker-1 -> invoker-0[入参的{@link Invoker}]
+             */

@@ -3,6 +3,8 @@ package org.apache.dubbo.rpc.protocol.dubbo.demo;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.rpc.*;
+import org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -12,14 +14,20 @@ import org.junit.Test;
  **/
 public class DubboProtocolTest {
 
+    private Protocol protocol;
+    private ProxyFactory proxyFactory;
+    private RpcService rpcService;
+
+    @Before
+    public void prepare(){
+        // 指定协议和代理对象
+        this.protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+        this.proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+        this.rpcService = new RpcServiceImpl();
+    }
+
     @Test
     public void dubboProtocol() {
-        // 指定协议和代理对象
-        Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
-        ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
-
-        // 指定接口
-        RpcService rpcService = new RpcServiceImpl();
 
         URL url = new URL("dubbo", "192.168.153.103", 9999);
         // 获取Invoker
@@ -44,6 +52,24 @@ public class DubboProtocolTest {
         invocation.setMethodName("doRpc");
         Result result = remoteInvoker.invoke(invocation);
         System.out.println("invoker result -> " + result.getValue());
+
+        while (true){
+
+        }
+    }
+
+    @Test
+    public void protocolWithFilter(){
+        URL url = new URL("dubbo","192.168.153.103",9090);
+        // 一般来说getInvoker是针对server的，getProxy是针对client的
+        Invoker<RpcService> invoker = proxyFactory.getInvoker(rpcService,RpcService.class,url);
+        ProtocolFilterWrapper filterWrapper = new ProtocolFilterWrapper(protocol);
+        filterWrapper.export(invoker);
+
+        Invoker<RpcService> clientRpc = protocol.refer(RpcService.class,url);
+        RpcService client = proxyFactory.getProxy(clientRpc);
+
+        System.out.println(client.doRpc("hello with filter"));
 
         while (true){
 

@@ -1,0 +1,2 @@
+req=org.apache.dubbo.rpc.protocol.dubbo.demo.DubboRequestFilter
+sen=org.apache.dubbo.rpc.protocol.dubbo.demo.SensitiveFilter
