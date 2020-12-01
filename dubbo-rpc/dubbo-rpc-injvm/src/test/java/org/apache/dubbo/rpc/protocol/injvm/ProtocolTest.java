@@ -24,6 +24,10 @@ import org.apache.dubbo.rpc.ProxyFactory;
 
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.matchers.JUnitMatchers.containsString;

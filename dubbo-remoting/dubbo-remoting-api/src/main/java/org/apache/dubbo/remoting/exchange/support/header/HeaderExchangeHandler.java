@@ -63,9 +63,9 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
     }
 
     private static boolean isClientSide(Channel channel) {
-        InetSocketAddress address = channel.getRemoteAddress();
-        URL url = channel.getUrl();
-        return url.getPort() == address.getPort() &&
+        InetSocketAddress address = channel.getRemoteAddress();// 如果对端是server的话，那么remoteAddress就是server的地址
+        URL url = channel.getUrl();// 构造url的时候，这个就是server的地址
+        return url.getPort() == address.getPort() &&//端口相同 并且url也相同，这种情况只有是client端才会出现；因为如果对端是client的话，remoteAddress是客户端的地址
                 NetUtils.filterLocalHost(url.getIp())
                         .equals(NetUtils.filterLocalHost(address.getAddress().getHostAddress()));
     }
