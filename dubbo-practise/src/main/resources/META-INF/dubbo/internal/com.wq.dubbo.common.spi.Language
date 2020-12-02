@@ -1,0 +1,2 @@
+java=com.wq.dubbo.common.spi.JavaLanguage
+golang=com.wq.dubbo.common.spi.GolangLanguage
