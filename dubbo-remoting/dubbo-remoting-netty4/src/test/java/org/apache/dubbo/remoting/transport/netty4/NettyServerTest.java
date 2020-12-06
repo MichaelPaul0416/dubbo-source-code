@@ -1,6 +1,5 @@
 package org.apache.dubbo.remoting.transport.netty4;
 
-import com.sun.jndi.toolkit.url.Uri;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.remoting.Channel;
@@ -48,7 +47,7 @@ public class NettyServerTest {
             }
         });
         System.out.println("start ok");
-        while (true){
+        while (true) {
 
         }
     }
@@ -86,7 +85,7 @@ public class NettyServerTest {
             }
         });
         nettyClient.send("client request");
-        while (nettyClient.isConnected()){
+        while (nettyClient.isConnected()) {
 
         }
     }
