@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * AbstractServiceConfig
- *
+ * rpc服务相关参数控制[版本，群组，延迟，权重等优化调用的因素配置]
  * @export
  */
 public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
@@ -42,9 +42,15 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
     protected Boolean deprecated;
 
     // delay service exporting
+    /**
+     * 延迟一定的毫秒数之后进行当前rpc服务的导出
+     */
     protected Integer delay;
 
     // whether to export the service
+    /**
+     * 是否需要导出当前服务，也就是暴露当前rpc服务
+     */
     protected Boolean export;
 
     // weight

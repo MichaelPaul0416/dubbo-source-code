@@ -34,6 +34,11 @@ public @interface Parameter {
 
     boolean required() default false;
 
+    /**
+     * 使用{@link Parameter#excluded()}修饰的方法返回true，
+     * 那么那个{@link org.apache.dubbo.config.AbstractConfig}对应的属性在调用{@code AbstractConfig#appendParameters}就不会将值暴露给其他对象
+     * @return
+     */
     boolean excluded() default false;
 
     /**

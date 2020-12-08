@@ -64,7 +64,7 @@ import static org.apache.dubbo.common.utils.NetUtils.isInvalidPort;
 
 /**
  * ServiceConfig
- *
+ * 针对一个rpc接口的服务配置
  * @export
  */
 public class ServiceConfig<T> extends AbstractServiceConfig {
@@ -78,12 +78,19 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private static final Map<String, Integer> RANDOM_PORT_MAP = new HashMap<String, Integer>();
 
     private static final ScheduledExecutorService delayExportExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboServiceDelayExporter", true));
+    /**
+     * 当前rpc接口导出后的所有{@link URL}集合，主要是一个URL对应一个{@link ProtocolConfig}
+     * 也就是同一个接口以n个协议暴露的话，这里的URLs就有n个
+     */
     private final List<URL> urls = new ArrayList<URL>();
     private final List<Exporter<?>> exporters = new ArrayList<Exporter<?>>();
     // interface type
     private String interfaceName;
     private Class<?> interfaceClass;
     // reference to interface impl
+    /**
+     * 接口实现
+     */
     private T ref;
     // service name
     private String path;
@@ -195,6 +202,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     public synchronized void export() {
         if (provider != null) {
             if (export == null) {
+                // 有ProviderConfig决定，是否需要导出
                 export = provider.getExport();
             }
             if (delay == null) {
@@ -202,6 +210,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             }
         }
         if (export != null && !export) {
+            // 不需要导出的话，当前直接返回
             return;
         }
 
@@ -237,6 +246,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 module = provider.getModule();
             }
             if (registries == null) {
+                // ProviderConfig本质上也是一个AbstractInterfaceConfig，也有一个成员变量List<RegistryConfig>
                 registries = provider.getRegistries();
             }
             if (monitor == null) {
@@ -263,6 +273,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             }
         }
         if (ref instanceof GenericService) {
+            // 指定泛化调用的接口类
             interfaceClass = GenericService.class;
             if (StringUtils.isEmpty(generic)) {
                 generic = Boolean.TRUE.toString();
@@ -359,6 +370,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         }
     }
 
+    /**
+     * 把当前的rpc服务接口通过指定的{@link ProtocolConfig}进行暴露，注册到入参{@code registryURLs}指定的注册中心上
+     * @param protocolConfig
+     * @param registryURLs
+     */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
         if (name == null || name.length() == 0) {
@@ -372,11 +388,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (ConfigUtils.getPid() > 0) {
             map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
         }
+        // 从各个AbstractConfig中获取属性，写入到map中
         appendParameters(map, application);
         appendParameters(map, module);
         appendParameters(map, provider, Constants.DEFAULT_KEY);
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
+        // 将MethodConfig这些控制rpc方法级别的影响因素，写入到map中
         if (methods != null && !methods.isEmpty()) {
             for (MethodConfig method : methods) {
                 appendParameters(map, method, method.getName());
@@ -469,6 +487,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
+        // 把上面从各个AbstractConfig中获取的属性塞入到URL对象中
         URL url = new URL(name, host, port, (contextPath == null || contextPath.length() == 0 ? "" : contextPath + "/") + path, map);
 
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -507,9 +526,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                             registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);
                         }
 
+                        // 将rpc接口封装为Invoker
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        // 将Invoker对象导出为Exporter对象，对外暴露
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);
                     }
