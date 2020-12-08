@@ -167,6 +167,11 @@ public class ConfigUtils {
         }
     }
 
+    /**
+     * {@link System#getProperty(String)}读取，如果没有的话，再从{@code dubbo.properties.file}指定的文件读取
+     * @param key
+     * @return
+     */
     public static String getProperty(String key) {
         return getProperty(key, null);
     }

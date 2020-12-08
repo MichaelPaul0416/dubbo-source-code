@@ -37,7 +37,8 @@ import java.util.regex.Pattern;
 
 /**
  * Utility methods and public methods for parsing configuration
- *
+ * 主要设置一些配置，从环境变量System.getProperty或者从dubbo.properties.file中指定
+ * 为{@link AbstractConfig}及其子类设置对应的属性值
  * @export
  */
 public abstract class AbstractConfig implements Serializable {
@@ -89,6 +90,11 @@ public abstract class AbstractConfig implements Serializable {
         return value;
     }
 
+    /**
+     * 遍历{@link AbstractConfig}的所有set方法，从系统变量System.getProperty()或者dubbo.properties.file指定的文件中
+     * 根据set方法名获取对应的变量名，结合变量名和入参{@link AbstractConfig}实例，设置set方法对应的属性值
+     * @param config
+     */
     protected static void appendProperties(AbstractConfig config) {
         if (config == null) {
             return;
@@ -100,10 +106,12 @@ public abstract class AbstractConfig implements Serializable {
                 String name = method.getName();
                 if (name.length() > 3 && name.startsWith("set") && Modifier.isPublic(method.getModifiers())
                         && method.getParameterTypes().length == 1 && isPrimitive(method.getParameterTypes()[0])) {
+                    // 根据方法名获取对应的属性名字
                     String property = StringUtils.camelToSplitName(name.substring(3, 4).toLowerCase() + name.substring(4), ".");//setRpcResult-->rpc.result
 
                     String value = null;
                     if (config.getId() != null && config.getId().length() > 0) {
+                        // dubbo.tagName.id.set方法对应的属性名（驼峰改为使用.做间隔）
                         String pn = prefix + config.getId() + "." + property;
                         value = System.getProperty(pn);
                         if (!StringUtils.isBlank(value)) {
@@ -111,6 +119,7 @@ public abstract class AbstractConfig implements Serializable {
                         }
                     }
                     if (value == null || value.length() == 0) {
+                        // 缺少id
                         String pn = prefix + property;
                         value = System.getProperty(pn);
                         if (!StringUtils.isBlank(value)) {
@@ -123,6 +132,7 @@ public abstract class AbstractConfig implements Serializable {
                             getter = config.getClass().getMethod("get" + name.substring(3));
                         } catch (NoSuchMethodException e) {
                             try {
+                                // 针对boolean类型
                                 getter = config.getClass().getMethod("is" + name.substring(3));
                             } catch (NoSuchMethodException e2) {
                                 getter = null;
@@ -147,6 +157,7 @@ public abstract class AbstractConfig implements Serializable {
                         }
                     }
                     if (value != null && value.length() > 0) {
+                        // 把value转换成对应类型的值
                         method.invoke(config, convertPrimitive(method.getParameterTypes()[0], value));//System或者dubbo.properties.file中指定的该属性的值，赋值给AbstractConfig以及子类对应的field中--执行的是setField方法
                     }
                 }
@@ -156,6 +167,13 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    /**
+     * {@link AbstractConfig#getClass()}的简单类名
+     * 如果以Config或者Bean结尾的话，删除结尾这部分
+     * 最后将剩余部分转为全部小写
+     * @param cls
+     * @return
+     */
     private static String getTagName(Class<?> cls) {
         String tag = cls.getSimpleName();
         for (String suffix : SUFFIXES) {
@@ -172,6 +190,13 @@ public abstract class AbstractConfig implements Serializable {
         appendParameters(parameters, config, null);
     }
 
+    /**
+     * 把入参{@code config}中get或者is开头的方法，获取他们对应值塞入到入参{@code parameters}中
+     * key是get或者is方法对应的属性名转换后的名字，value是对应的值
+     * @param parameters
+     * @param config
+     * @param prefix
+     */
     @SuppressWarnings("unchecked")
     protected static void appendParameters(Map<String, String> parameters, Object config, String prefix) {
         if (config == null) {
@@ -186,14 +211,18 @@ public abstract class AbstractConfig implements Serializable {
                         && Modifier.isPublic(method.getModifiers())
                         && method.getParameterTypes().length == 0
                         && isPrimitive(method.getReturnType())) {
+                    // 根据get方法识别出需要设置的变量名（方法名以get或者is开头 && 不是getClass && public方法 && 无入参 && 方法返回类型是基本类型+String+Object）
                     Parameter parameter = method.getAnnotation(Parameter.class);
                     if (method.getReturnType() == Object.class || parameter != null && parameter.excluded()) {
+                        // 方法的返回值是true 或者 （方法上有Parameter注解修饰 并且 注解的excluded方法返回true）
                         continue;
                     }
                     int i = name.startsWith("get") ? 3 : 2;
+                    // getRpcResult -> rpc.result
                     String prop = StringUtils.camelToSplitName(name.substring(i, i + 1).toLowerCase() + name.substring(i + 1), ".");
-                    String key;
+                    String key;// 属性名称
                     if (parameter != null && parameter.key().length() > 0) {
+                        // 通过@Parameter#key指定当前get方法的属性名
                         key = parameter.key();
                     } else {
                         key = prop;
@@ -243,6 +272,12 @@ public abstract class AbstractConfig implements Serializable {
         appendAttributes(parameters, config, null);
     }
 
+    /**
+     * 把config中的属性（通过get或者is开头的方法暴露）设置到parameters中
+     * @param parameters
+     * @param config
+     * @param prefix
+     */
     protected static void appendAttributes(Map<Object, Object> parameters, Object config, String prefix) {
         if (config == null) {
             return;
@@ -280,6 +315,11 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    /**
+     * 基础类型是原始值或者是八大基本类型+String+Object
+     * @param type
+     * @return
+     */
     private static boolean isPrimitive(Class<?> type) {
         return type.isPrimitive()
                 || type == String.class
@@ -407,6 +447,11 @@ public abstract class AbstractConfig implements Serializable {
         this.id = id;
     }
 
+    /**
+     * 把annotation中的对应的变量值设置到当前类中对应的属性上{@link AbstractConfig}
+     * @param annotationClass
+     * @param annotation
+     */
     protected void appendAnnotation(Class<?> annotationClass, Object annotation) {
         Method[] methods = annotationClass.getMethods();
         for (Method method : methods) {

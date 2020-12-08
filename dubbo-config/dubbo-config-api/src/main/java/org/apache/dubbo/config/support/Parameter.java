@@ -36,6 +36,10 @@ public @interface Parameter {
 
     boolean excluded() default false;
 
+    /**
+     * 是否需要{@link org.apache.dubbo.common.URL#encode(String)}编码
+     * @return
+     */
     boolean escaped() default false;
 
     boolean attribute() default false;

@@ -43,7 +43,7 @@ import java.util.Map;
 
 /**
  * AbstractDefaultConfig
- *
+ * rpc接口配置类，拥有注册中心({@code List<RegistryConfig>})，监视器中心({@code MonitorConfig})，应用中心({@code ApplicationConfig})
  * @export
  */
 public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
@@ -51,9 +51,15 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     private static final long serialVersionUID = -1559314110797223229L;
 
     // local impl class name for the service interface
+    /**
+     * rpc接口名称
+     */
     protected String local;
 
     // local stub class name for the service interface
+    /**
+     * rpc接口存根
+     */
     protected String stub;
 
     // service monitor
@@ -88,6 +94,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected ModuleConfig module;
 
     // registry centers
+    /**
+     * 注册地址配置
+     */
     protected List<RegistryConfig> registries;
 
     // connection events
@@ -134,6 +143,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected void checkApplication() {
         // for backward compatibility
         if (application == null) {
+            // 从配置文件中读取并且构造初始化ApplicationConfig
             String applicationName = ConfigUtils.getProperty("dubbo.application.name");
             if (applicationName != null && applicationName.length() > 0) {
                 application = new ApplicationConfig();
@@ -145,6 +155,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
         appendProperties(application);
 
+        // 设置服务shutdown时的参数dubbo.service.shutdown.wait
         String wait = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_KEY);
         if (wait != null && wait.trim().length() > 0) {
             System.setProperty(Constants.SHUTDOWN_WAIT_KEY, wait.trim());
@@ -156,6 +167,11 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
     }
 
+    /**
+     * 从当前的注册中心{@link AbstractInterfaceConfig#registries}中获取注册的URL
+     * @param provider
+     * @return
+     */
     protected List<URL> loadRegistries(boolean provider) {
         checkRegistry();//一般来自于<dubbo:registry/>
         List<URL> registryList = new ArrayList<URL>();
@@ -186,6 +202,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                             map.put("protocol", "dubbo");
                         }
                     }
+                    // address使用分号;隔开不同的url
                     List<URL> urls = UrlUtils.parseURLs(address, map);
                     for (URL url : urls) {
                         url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());
@@ -246,6 +263,11 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         return null;
     }
 
+    /**
+     * 检查入参methods中的方法配置，在入参interfaceClass中是否都有，或者方法名是否都一样
+     * @param interfaceClass
+     * @param methods
+     */
     protected void checkInterfaceAndMethods(Class<?> interfaceClass, List<MethodConfig> methods) {
         // interface cannot be null
         if (interfaceClass == null) {
@@ -277,6 +299,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
     }
 
+    /**
+     * 根据当前环境(local,stub,mock)判断，入参的接口类是否有对应后缀结尾的实现类
+     * @param interfaceClass
+     */
     protected void checkStubAndMock(Class<?> interfaceClass) {
         if (ConfigUtils.isNotEmpty(local)) {
             Class<?> localClass = ConfigUtils.isDefault(local) ? ReflectUtils.forName(interfaceClass.getName() + "Local") : ReflectUtils.forName(local);
