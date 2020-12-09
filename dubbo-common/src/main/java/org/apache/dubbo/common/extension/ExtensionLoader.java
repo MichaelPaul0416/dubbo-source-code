@@ -724,6 +724,7 @@ public class ExtensionLoader<T> {
                         + ", " + clazz.getClass().getName());
             }
         } else if (isWrapperClass(clazz)) {//有一个interface作为唯一入参的构造器
+            // 这里存储下所有的wrapper类对象，后面在使用adaptive构建的时候，会使用这个来封装
             Set<Class<?>> wrappers = cachedWrapperClasses;
             if (wrappers == null) {
                 cachedWrapperClasses = new ConcurrentHashSet<Class<?>>();
