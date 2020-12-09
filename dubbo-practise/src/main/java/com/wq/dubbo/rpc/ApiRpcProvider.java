@@ -18,12 +18,13 @@ public class ApiRpcProvider {
         appConfig.setName("example");
 
         RegistryConfig registryConfig = new RegistryConfig();
-        registryConfig.setAddress("127.0.0.1:8888");
-        registryConfig.setUsername("dubbo");
-        registryConfig.setPassword("dubbo");
+        registryConfig.setAddress("127.0.0.1:2181");
+        registryConfig.setUsername("");
+        registryConfig.setPassword("");
+        registryConfig.setProtocol("zookeeper");
 
         ProtocolConfig protocolConfig = new ProtocolConfig();
-        protocolConfig.setName("dubbo");
+        protocolConfig.setName("injvm");
         protocolConfig.setPort(8088);
         protocolConfig.setThreads(10);
         // 使用netty4进行网络交互，默认值netty为netty3版本

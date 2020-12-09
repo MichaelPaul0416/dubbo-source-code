@@ -111,6 +111,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     // the scope for referring/exporting a service, if it's local, it means searching in current JVM only.
     private String scope;
 
+    /**
+     * 如果当前{@link AbstractInterfaceConfig#registries}为空的话，从{@code dubbo.registry.address}属性加载注册中心
+     * 多个注册中心的话，使用{@code |}分隔
+     */
     protected void checkRegistry() {
         // for backward compatibility
         if (registries == null || registries.isEmpty()) {
@@ -169,6 +173,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * 从当前的注册中心{@link AbstractInterfaceConfig#registries}中获取注册的URL
+     * 一般一个注册中心对应一个{@link URL}
      * @param provider
      * @return
      */

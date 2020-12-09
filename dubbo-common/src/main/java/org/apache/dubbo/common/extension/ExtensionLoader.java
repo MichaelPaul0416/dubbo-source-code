@@ -31,15 +31,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
@@ -556,6 +548,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 主要是执行一系列的setXXX方法
+     *
      * @param instance
      * @return
      */
@@ -602,6 +595,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 加载所有{@link SPI}接口的配置文件，构造实例以及存储{@link Class}对象
+     *
      * @return
      */
     private Map<String, Class<?>> getExtensionClasses() {
@@ -704,11 +698,10 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     *
      * @param extensionClasses {@link Map}
-     * @param resourceURL 代表SPI文件的{@link URL}
-     * @param clazz {@link SPI}扩展类的{@link Class}对象
-     * @param name SPI配置文件中的key部分，别名，可以是多个
+     * @param resourceURL      代表SPI文件的{@link URL}
+     * @param clazz            {@link SPI}扩展类的{@link Class}对象
+     * @param name             SPI配置文件中的key部分，别名，可以是多个
      * @throws NoSuchMethodException
      */
     private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name) throws NoSuchMethodException {
@@ -770,6 +763,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 判断clazz指定的类是否有含有{@link SPI}接口类的有参构造器，如果是的话就是wrapper
+     *
      * @param clazz
      * @return
      */
@@ -785,6 +779,7 @@ public class ExtensionLoader<T> {
     /**
      * 如果当前{@link SPI}实现类使用了{@link org.apache.dubbo.common.Extension}修饰，那么返回注解{@link Extension#value()}指定的值
      * 否则的话返回当前class的{@link Class#getSimpleName()}的小写
+     *
      * @param clazz
      * @return
      */
@@ -822,6 +817,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 自定义Adaptive的Class，调用Complier进行编译
+     *
      * @return
      */
     private Class<?> createAdaptiveExtensionClass() {
@@ -834,6 +830,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 构造java源码
+     *
      * @return
      */
     private String createAdaptiveExtensionClassCode() {
@@ -991,6 +988,7 @@ public class ExtensionLoader<T> {
                 }
                 // 获取对应的spi名字
                 code.append("\nString extName = ").append(getNameCode).append(";");
+                code.append("\nSystem.out.println(\"adaptive name->\"+extName);\n");
                 // check extName == null?
                 String s = String.format("\nif(extName == null) " +
                                 "throw new IllegalStateException(\"Fail to get extension(%s) name from url(\" + url.toString() + \") use keys(%s)\");",
@@ -1000,6 +998,9 @@ public class ExtensionLoader<T> {
                 s = String.format("\n%s extension = (%<s)%s.getExtensionLoader(%s.class).getExtension(extName);",
                         type.getName(), ExtensionLoader.class.getSimpleName(), type.getName());
                 code.append(s);
+
+                // 输出真正被适配的类名
+                code.append("\nSystem.out.println(\"actually adaptive class->\"+extension.getClass().getName());\n");
 
                 // return statement
                 if (!rt.equals(void.class)) {

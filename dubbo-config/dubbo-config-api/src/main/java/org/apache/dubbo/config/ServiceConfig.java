@@ -95,6 +95,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     // service name
     private String path;
     // method configuration
+    /**
+     * 当前类没有设置，那就可能是从其他AbstractConfig或者从环境中取对应的值通过反射赋值给当前变量
+     * 针对RPC方法的一些配置
+     */
     private List<MethodConfig> methods;
     private ProviderConfig provider;
     private transient volatile boolean exported;
@@ -202,7 +206,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     public synchronized void export() {
         if (provider != null) {
             if (export == null) {
-                // 有ProviderConfig决定，是否需要导出
+                // 由ProviderConfig决定，是否需要导出
                 export = provider.getExport();
             }
             if (delay == null) {
@@ -299,6 +303,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
+            // 检查localClass是否是interfaceClass的接口实现类
             if (!interfaceClass.isAssignableFrom(localClass)) {
                 throw new IllegalStateException("The local implementation class " + localClass.getName() + " not implement interface " + interfaceName);
             }
@@ -365,6 +370,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
         List<URL> registryURLs = loadRegistries(true);
+        // 针对每个协议，都注册到不同的注册中心
         for (ProtocolConfig protocolConfig : protocols) {
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
@@ -532,6 +538,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
                         // 将Invoker对象导出为Exporter对象，对外暴露
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
+                        // exporters控制了当前rpc接口暴露时，所有协议的所有注册中心
                         exporters.add(exporter);
                     }
                 } else {
@@ -543,6 +550,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 }
             }
         }
+        // 当前协议的暴露URL
         this.urls.add(url);
     }
 
