@@ -101,6 +101,7 @@ public class ExtensionLoader<T> {
 
     /**
      * {@link Holder}使用{@code volatile}包装对象
+     * 适配器类
      */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<Object>();
     /**

@@ -71,6 +71,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     private static final long serialVersionUID = 3033787999037024738L;
 
+    /**
+     * 获取一个适配的代理对象{@code Protocol$Adaptive}，实际上代理方法内部调用了
+     * {@link ExtensionLoader#getExtension(String)}这个方法在实现的时候，会将实际获取到的spi扩展实现，进行n层封装
+     * 封装的类来源于{@link ExtensionLoader#cachedWrapperClasses}
+     */
     private static final Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     private static final ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
@@ -520,6 +525,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         url = url.addParameterIfAbsent(Constants.DYNAMIC_KEY, registryURL.getParameter(Constants.DYNAMIC_KEY));
                         URL monitorUrl = loadMonitor(registryURL);
                         if (monitorUrl != null) {
+                            // 为原先的url进行监视器的地址赋值
                             url = url.addParameterAndEncoded(Constants.MONITOR_KEY, monitorUrl.toFullString());
                         }
                         if (logger.isInfoEnabled()) {
@@ -532,12 +538,23 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                             registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);
                         }
 
-                        // 将rpc接口封装为Invoker
+                        /**
+                         * 将rpc接口封装为Invoker,并且这里getInvoker方法的最后一个入参是URL，是通过注册中心的URL调用后返回
+                         * 原来的协议URL作为新URL的export值存储
+                         * 新的URL是注册中心的URL返回的，所以协议是registry
+                         */
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
-                        // 将Invoker对象导出为Exporter对象，对外暴露
-                        Exporter<?> exporter = protocol.export(wrapperInvoker);
+                        // 将Invoker对象导出为Exporter对象，对外暴露；wrapperInvoker.getUrl().getProtocol()此时是registry
+                        /**
+                         * 所以这里protocol.export(Invoker)的流程是代理类内部
+                         * Protocol extension = (Protocol)ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("registry");
+                         * 这个时候Protocol的真正类型其实是QosProtocolWrapper
+                         * 获取QosProtocolWrapper[ProtocolFilterWrapper[ProtocolListenerWrapper[RegistryProtocol]]]
+                         * 通过装饰器模式层层调用，最终到RegistryProtocol
+                         */
+                        Exporter<?> exporter = protocol.export(wrapperInvoker);// 这个时候的protocol其实是一个Adaptive——Protocol$Adaptive
                         // exporters控制了当前rpc接口暴露时，所有协议的所有注册中心
                         exporters.add(exporter);
                     }

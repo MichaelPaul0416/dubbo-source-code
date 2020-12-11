@@ -66,6 +66,12 @@ public class RegistryProtocol implements Protocol {
     //providerurl <--> exporter
     private final Map<String, ExporterChangeableWrapper<?>> bounds = new ConcurrentHashMap<String, ExporterChangeableWrapper<?>>();
     private Cluster cluster;
+    /**
+     * 在构造{@link RegistryProtocol}实例的时候，是在{@link ExtensionLoader}中构造实例
+     * 在{@link ExtensionLoader#injectExtension(Object)}方法中注入属性
+     * 这个是一个Adaptive{@code Protocol$Adaptive}
+     * 用这个代理类来控制，方便不同的Protocol实现类在运行期根据入参中的protocol动态选择
+     */
     private Protocol protocol;
     private RegistryFactory registryFactory;
     private ProxyFactory proxyFactory;
@@ -122,6 +128,11 @@ public class RegistryProtocol implements Protocol {
         return overrideListeners;
     }
 
+    /**
+     * 把{@code registryUrl添加到{@code registedProviderUrl}的注册中
+     * @param registryUrl
+     * @param registedProviderUrl
+     */
     public void register(URL registryUrl, URL registedProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
         registry.register(registedProviderUrl);
@@ -132,11 +143,12 @@ public class RegistryProtocol implements Protocol {
         //export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
 
+        // 要注册的注册中心地址
         URL registryUrl = getRegistryUrl(originInvoker);
 
         //registry provider
         final Registry registry = getRegistry(originInvoker);
-        final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
+        final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);// 已经注册成功的注册中心地址
 
         //to judge to delay publish whether or not
         boolean register = registedProviderUrl.getParameter("register", true);
@@ -167,6 +179,11 @@ public class RegistryProtocol implements Protocol {
                 exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
                 if (exporter == null) {
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
+                    /**
+                     * protocol.export(Invoker) 此时的protocol是一个Adaptive，也就是Protocol$Adaptive
+                     * 根据Invoker.getUrl().getProtocol()获取对应的协议名称
+                     * 然后在运行期根据协议的名称去获取对应的spi实现进行代理调用
+                     */
                     exporter = new ExporterChangeableWrapper<T>((Exporter<T>) protocol.export(invokerDelegete), originInvoker);
                     bounds.put(key, exporter);
                 }
@@ -248,7 +265,7 @@ public class RegistryProtocol implements Protocol {
      * @return
      */
     private URL getProviderUrl(final Invoker<?> origininvoker) {
-        String export = origininvoker.getUrl().getParameterAndDecoded(Constants.EXPORT_KEY);
+        String export = origininvoker.getUrl().getParameterAndDecoded(Constants.EXPORT_KEY);// 获取原先的通讯url，也就是接口要暴露时协议url
         if (export == null || export.length() == 0) {
             throw new IllegalArgumentException("The registry export url is null! registry: " + origininvoker.getUrl());
         }
