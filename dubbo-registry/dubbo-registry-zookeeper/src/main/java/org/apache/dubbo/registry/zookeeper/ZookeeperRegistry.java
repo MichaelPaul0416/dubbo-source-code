@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * ZookeeperRegistry
- *
+ * 封装zookeeper的操作
  */
 public class ZookeeperRegistry extends FailbackRegistry {
 

@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
+ * 自动恢复的注册中心，不可用状态变成可用后，自动恢复
  *
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
@@ -71,7 +72,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             public void run() {
                 // Check and connect to the registry
                 try {
-                    retry();
+                    retry();// failback
                 } catch (Throwable t) { // Defensive fault tolerance
                     logger.error("Unexpected error occur at failed retry, cause: " + t.getMessage(), t);
                 }

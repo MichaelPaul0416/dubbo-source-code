@@ -73,6 +73,9 @@ public class RegistryProtocol implements Protocol {
      * 用这个代理类来控制，方便不同的Protocol实现类在运行期根据入参中的protocol动态选择
      */
     private Protocol protocol;
+    /**
+     * {@link RegistryProtocol}在实例被构造期间注入
+     */
     private RegistryFactory registryFactory;
     private ProxyFactory proxyFactory;
 
@@ -129,9 +132,9 @@ public class RegistryProtocol implements Protocol {
     }
 
     /**
-     * 把{@code registryUrl添加到{@code registedProviderUrl}的注册中
-     * @param registryUrl
-     * @param registedProviderUrl
+     * 本质就是将rpc服务信息写到注册中心上
+     * @param registryUrl 注册中心的url
+     * @param registedProviderUrl 已经注册成功的rpc接口的URL
      */
     public void register(URL registryUrl, URL registedProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
@@ -140,13 +143,18 @@ public class RegistryProtocol implements Protocol {
 
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
+        /**
+         * 1.获取注册中心
+         * 2.将rpc服务信息写道注册中心上
+         * 3.构建一个{@link OverrideListener}，针对当前服务进行订阅
+         */
         //export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
 
         // 要注册的注册中心地址
         URL registryUrl = getRegistryUrl(originInvoker);
 
-        //registry provider
+        //registry provider，获取对应的注册中心，并且与之建立链接
         final Registry registry = getRegistry(originInvoker);
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);// 已经注册成功的注册中心地址
 
@@ -156,6 +164,7 @@ public class RegistryProtocol implements Protocol {
         ProviderConsumerRegTable.registerProvider(originInvoker, registryUrl, registedProviderUrl);
 
         if (register) {
+            // 将后者注册到前者对应的注册中心上
             register(registryUrl, registedProviderUrl);
             ProviderConsumerRegTable.getProviderWrapper(originInvoker).setReg(true);
         }
@@ -165,6 +174,7 @@ public class RegistryProtocol implements Protocol {
         final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
         final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
+        // 订阅完之后先通知监听zk节点变化的NotifyListener
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
         //Ensure that a new exporter instance is returned every time export
         return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registedProviderUrl);
@@ -218,6 +228,7 @@ public class RegistryProtocol implements Protocol {
      */
     private Registry getRegistry(final Invoker<?> originInvoker) {
         URL registryUrl = getRegistryUrl(originInvoker);
+        // RegistryFactory$Adaptive根据入参URL进行动态选择实现类
         return registryFactory.getRegistry(registryUrl);
     }
 
