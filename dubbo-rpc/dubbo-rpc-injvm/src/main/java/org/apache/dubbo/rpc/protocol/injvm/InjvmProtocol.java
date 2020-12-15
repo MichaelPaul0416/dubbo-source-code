@@ -94,6 +94,16 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
         return new InjvmInvoker<T>(serviceType, url, url.getServiceKey(), exporterMap);
     }
 
+    /**
+     * <ul>判断协议是否是injvmRefer</ul>
+     * <li>1.protocol=injvm -> false</li>
+     * <li>2.scope=local || url.getParameter("injvm") == true -> true</li>
+     * <li>3.scope = remote -> false</li>
+     * <li>4.url.getParameter("generic") == true -> false</li>
+     * <li>5.根据入参url在当前协议的exporterMap中能找到对应的exporter</li>
+     * @param url
+     * @return
+     */
     public boolean isInjvmRefer(URL url) {
         final boolean isJvmRefer;
         String scope = url.getParameter(Constants.SCOPE_KEY);

@@ -29,7 +29,7 @@ public interface Node {
     URL getUrl();
 
     /**
-     * is available.
+     * is available.委托给各个{@link Invoker}
      *
      * @return available.
      */

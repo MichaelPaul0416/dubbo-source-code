@@ -65,14 +65,24 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     private static final long serialVersionUID = -5864351140409987595L;
 
+    /**
+     * {@link Protocol}目前没有使用{@link org.apache.dubbo.common.extension.Adaptive}注解修饰的实现类
+     * 所以目前这里就是通过自己编写字节码实现的代理类{@code Protocol$Adaptive}
+     */
     private static final Protocol refprotocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     private static final Cluster cluster = ExtensionLoader.getExtensionLoader(Cluster.class).getAdaptiveExtension();
 
     private static final ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+    /**
+     * 注册中心的url集合
+     */
     private final List<URL> urls = new ArrayList<URL>();
     // interface name
     private String interfaceName;
+    /**
+     * rpc接口类
+     */
     private Class<?> interfaceClass;
     private Class<?> asyncInterfaceClass;
     // client type
@@ -85,6 +95,9 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     private ConsumerConfig consumer;
     private String protocol;
     // interface proxy reference
+    /**
+     * 代理的远程接口实例对象
+     */
     private transient volatile T ref;
     private transient volatile Invoker<?> invoker;
     private transient volatile boolean initialized;
@@ -212,8 +225,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         String resolve = System.getProperty(interfaceName);
         String resolveFile = null;
         if (resolve == null || resolve.length() == 0) {
+            // 1.先检查是否有dubbo.resolve.file这个配置项
             resolveFile = System.getProperty("dubbo.resolve.file");
             if (resolveFile == null || resolveFile.length() == 0) {
+                // 2.再检查${user.home}/dubbo-resolve.properties是否存在
                 File userResolveFile = new File(new File(System.getProperty("user.home")), "dubbo-resolve.properties");
                 if (userResolveFile.exists()) {
                     resolveFile = userResolveFile.getAbsolutePath();
@@ -357,6 +372,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
         if (isJvmRefer) {
             URL url = new URL(Constants.LOCAL_PROTOCOL, NetUtils.LOCALHOST, 0, interfaceClass.getName()).addParameters(map);
+            // 本虚拟机调用
             invoker = refprotocol.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
@@ -394,6 +410,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             }
 
             if (urls.size() == 1) {
+                // 只有一个注册中心的时候，这里的invoker就是RegistryProtocol#refer返回的
                 invoker = refprotocol.refer(interfaceClass, urls.get(0));//对应的协议应该都有一个对应的Invoker
             } else {
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
@@ -407,6 +424,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 if (registryURL != null) { // registry url is available
                     // use AvailableCluster only when register's cluster is available
                     URL u = registryURL.addParameter(Constants.CLUSTER_KEY, AvailableCluster.NAME);
+                    // 使用Cluster封装一个包装对象，进行集群的管理，然后将包装对象赋值给invoker，u是注册中心的url地址，invokers是rpc接口各个注册中心的执行封装
                     invoker = cluster.join(new StaticDirectory(u, invokers));
                 } else { // not a registry url
                     invoker = cluster.join(new StaticDirectory(invokers));
@@ -428,7 +446,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             logger.info("Refer dubbo service " + interfaceClass.getName() + " from url " + invoker.getUrl());
         }
         // create service proxy
-        return (T) proxyFactory.getProxy(invoker);
+        return (T) proxyFactory.getProxy(invoker);// 代理对象中包含invoker
     }
 
     private void checkDefault() {
@@ -438,6 +456,11 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         appendProperties(consumer);//将通过-Dxxx或者dubbo.properties.file指定的配置文件或者其他方式指定的属性的值，赋值给AbstractConfig【子类】
     }
 
+    /**
+     * 声明需要异步的接口rpc类
+     * @param interfaceClass
+     * @param map
+     */
     private void resolveAsyncInterface(Class<?> interfaceClass, Map<String, String> map) {
         AsyncFor annotation = interfaceClass.getAnnotation(AsyncFor.class);
         if (annotation == null) return;

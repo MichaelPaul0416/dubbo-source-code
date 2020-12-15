@@ -890,6 +890,7 @@ public class ExtensionLoader<T> {
                     // find URL getter method
                     LBL_PTS:
                     for (int i = 0; i < pts.length; ++i) {
+                        // 当前入参获取所有public方法
                         Method[] ms = pts[i].getMethods();
                         for (Method m : ms) {
                             String name = m.getName();
