@@ -342,8 +342,8 @@ public class RegistryProtocol implements Protocol {
                         + "," + Constants.CONFIGURATORS_CATEGORY
                         + "," + Constants.ROUTERS_CATEGORY));
 
-        // cluster此处是一个adaptive对象，需要根据url
-        Invoker invoker = cluster.join(directory);
+        // cluster此处是一个adaptive对象，需要根据url(directory#getUrl)
+        Invoker invoker = cluster.join(directory);// 一般cluster是一个wrapper类，这里是MockClusterWrapper
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;
     }

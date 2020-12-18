@@ -35,6 +35,7 @@ import org.apache.dubbo.rpc.Protocol;
 import org.apache.dubbo.rpc.ProxyFactory;
 import org.apache.dubbo.rpc.StaticContext;
 import org.apache.dubbo.rpc.cluster.Cluster;
+import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.directory.StaticDirectory;
 import org.apache.dubbo.rpc.cluster.support.AvailableCluster;
 import org.apache.dubbo.rpc.cluster.support.ClusterUtils;
@@ -99,6 +100,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
      * 代理的远程接口实例对象
      */
     private transient volatile T ref;
+    /**
+     * 如果是集群的话，通过{@link Cluster#join(Directory)}暴露
+     * 单点的话，通过{@link Protocol#refer(Class, URL)}暴露
+     */
     private transient volatile Invoker<?> invoker;
     private transient volatile boolean initialized;
     private transient volatile boolean destroyed;
@@ -439,7 +444,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         if (c == null) {
             c = true; // default true
         }
-        if (c && !invoker.isAvailable()) {
+        if (c && !invoker.isAvailable()) {// 一般交给invoker来判断provider是否可用
             throw new IllegalStateException("Failed to check the status of the service " + interfaceName + ". No provider available for the service " + (group == null ? "" : group + "/") + interfaceName + (version == null ? "" : ":" + version) + " from the url " + invoker.getUrl() + " to the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion());
         }
         if (logger.isInfoEnabled()) {

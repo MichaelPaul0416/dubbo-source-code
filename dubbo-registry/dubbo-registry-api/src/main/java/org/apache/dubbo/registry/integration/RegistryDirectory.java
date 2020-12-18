@@ -617,6 +617,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
     @Override
     public boolean isAvailable() {
+        // 遍历所有的Invoker，如果有一个是available，那就返回true
         if (isDestroyed()) {
             return false;
         }

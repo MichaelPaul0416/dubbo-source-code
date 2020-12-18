@@ -165,7 +165,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 }
             } else {
                 List<URL> urls = new ArrayList<URL>();
-                for (String path : toCategoriesPath(url)) {
+                for (String path : toCategoriesPath(url)) {//为zk路径下当前接口的[providers,configurators,routers]设置监听者
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                     if (listeners == null) {
                         zkListeners.putIfAbsent(url, new ConcurrentHashMap<NotifyListener, ChildListener>());
