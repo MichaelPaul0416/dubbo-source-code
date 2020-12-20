@@ -24,7 +24,7 @@ public class ApiRpcProvider {
         registryConfig.setProtocol("zookeeper");
 
         ProtocolConfig protocolConfig = new ProtocolConfig();
-        protocolConfig.setName("injvm");
+//        protocolConfig.setName("injvm");
         protocolConfig.setPort(8088);
         protocolConfig.setThreads(10);
         // 使用netty4进行网络交互，默认值netty为netty3版本
@@ -40,5 +40,8 @@ public class ApiRpcProvider {
         serviceConfig.setVersion("1.0.0");
 
         serviceConfig.export();
+
+        while (true) {
+        }
     }
 }

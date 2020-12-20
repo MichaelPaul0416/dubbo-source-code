@@ -157,9 +157,14 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         this.registry = registry;
     }
 
+    /**
+     * 消费者的{@link URL}
+     * @param url
+     */
     public void subscribe(URL url) {
         setConsumerUrl(url);
         // 观察者模式，将当前NotifyListener注册到注册中心的观察者列表中
+        // 将当前URL绑定一个NotifyListener
         registry.subscribe(url, this);
     }
 
@@ -254,6 +259,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (invokerUrls.isEmpty()) {
                 return;
             }
+            // 把对应的远程url转换成对应的Invoker，这些Invoker是涉及到调用时真正执行的Invoker
             Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
             Map<String, List<Invoker<T>>> newMethodInvokerMap = toMethodInvokers(newUrlInvokerMap); // Change method name to map Invoker Map
             // state change

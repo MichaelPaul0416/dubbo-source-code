@@ -73,7 +73,7 @@ public abstract class AbstractRegistry implements Registry {
      */
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
     /**
-     * {@code Map<rpc服务url,当前服务的所有订阅通知者>}
+     * {@code Map<订阅RPC服务url,当前服务的所有订阅通知者>}
      */
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
     /**
@@ -391,7 +391,7 @@ public abstract class AbstractRegistry implements Registry {
      *
      * @param url 订阅的URL
      * @param listener
-     * @param urls
+     * @param urls 需要通知的{@link URL}
      */
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
