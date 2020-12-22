@@ -235,9 +235,11 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     /**
      * Convert the invokerURL list to the Invoker Map. The rules of the conversion are as follows:
      * 1.If URL has been converted to invoker, it is no longer re-referenced and obtained directly from the cache, and notice that any parameter changes in the URL will be re-referenced.
+     *  如果{@link URL}已经被转换过成为{@link Invoker},那么后续就直接从缓存获取；但是涉及到通知notify了，就会重新获取
      * 2.If the incoming invoker list is not empty, it means that it is the latest invoker list
+     *  入参{@code invokerUrls}不为空，说明是最新的，以这个为准
      * 3.If the list of incoming invokerUrl is empty, It means that the rule is only a override rule or a route rule, which needs to be re-contrasted to decide whether to re-reference.
-     *
+     * 入参{@code invokerUrls}为空，说明url是一个重写的rule或者一个route rule（他们需要被重新对比来决定这些是否需要重新引用）
      * @param invokerUrls this parameter can't be null
      */
     // TODO: 2017/8/31 FIXME The thread pool should be used to refresh the address, otherwise the task may be accumulated.
@@ -253,9 +255,11 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (invokerUrls.isEmpty() && this.cachedInvokerUrls != null) {
                 invokerUrls.addAll(this.cachedInvokerUrls);
             } else {
+                // 入参的invokerUrls不为空，代表就是最新的，直接使用入参的就行
                 this.cachedInvokerUrls = new HashSet<URL>();
                 this.cachedInvokerUrls.addAll(invokerUrls);//Cached invoker urls, convenient for comparison
             }
+            // 此处如果待暴露的invokerUrls还是为空，就说明没有url待转换成Invoker
             if (invokerUrls.isEmpty()) {
                 return;
             }
@@ -341,7 +345,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
     /**
      * Turn urls into invokers, and if url has been refer, will not re-reference.
-     *
+     * 如果某个url已经被refer了，就不会再重新refer
      * @param urls
      * @return invokers
      */
@@ -370,6 +374,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (Constants.EMPTY_PROTOCOL.equals(providerUrl.getProtocol())) {
                 continue;
             }
+            // 判断是否有当前扩展的协议实现
             if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())) {
                 logger.error(new IllegalStateException("Unsupported protocol " + providerUrl.getProtocol() + " in notified url: " + providerUrl + " from registry " + getUrl().getAddress() + " to consumer " + NetUtils.getLocalHost()
                         + ", supported protocol: " + ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
@@ -394,6 +399,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         enabled = url.getParameter(Constants.ENABLED_KEY, true);
                     }
                     if (enabled) {
+                        // 此处真正根据协议构造对应的Invoker，根据rpc接口类型和远程provider的url构造一个代理对象Invoker
                         invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {

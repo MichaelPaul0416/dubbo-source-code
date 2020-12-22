@@ -69,6 +69,7 @@ public class ExtensionLoader_Adaptive_Test {
             SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
 
             Map<String, String> map = new HashMap<String, String>();
+            // 接口名SimpleExt -> simple.ext，如果@Adaptive注解没有指定值，那么默认值就是接口的simpleName，吧驼峰转换a.b.c
             map.put("simple.ext", "impl2");
             URL url = new URL("p1", "1.2.3.4", 1010, "path1", map);
 
@@ -82,6 +83,7 @@ public class ExtensionLoader_Adaptive_Test {
         SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
 
         Map<String, String> map = new HashMap<String, String>();
+        // @Adaptive注解有值的时候，以注解的值作为适配器的key获取对应的SPI实现类
         map.put("key2", "impl2");
         URL url = new URL("p1", "1.2.3.4", 1010, "path1", map);
 
@@ -101,12 +103,14 @@ public class ExtensionLoader_Adaptive_Test {
             String echo = ext.echo(URL.valueOf("1.2.3.4:20880"), "s");
             assertEquals("Ext3Impl1-echo", echo); // default value
 
+            // 指定了协议，就优先选择协议
             Map<String, String> map = new HashMap<String, String>();
             URL url = new URL("impl3", "1.2.3.4", 1010, "path1", map);
 
             echo = ext.echo(url, "s");
             assertEquals("Ext3Impl3-echo", echo); // use 2nd key, protocol
 
+            // 如果指定了协议，并且指定的key在@Adaptive注解的values中的顺序在协议之前，那就使用指定的key
             url = url.addParameter("key1", "impl2");
             echo = ext.echo(url, "s");
             assertEquals("Ext3Impl2-echo", echo); // use 1st key, key1

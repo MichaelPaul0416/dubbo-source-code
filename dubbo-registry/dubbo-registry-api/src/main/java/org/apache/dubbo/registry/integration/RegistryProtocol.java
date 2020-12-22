@@ -302,7 +302,7 @@ public class RegistryProtocol implements Protocol {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+    public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {// url 是远程接口服务地址
         url = url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY);
         Registry registry = registryFactory.getRegistry(url);
         if (RegistryService.class.equals(type)) {
@@ -325,12 +325,22 @@ public class RegistryProtocol implements Protocol {
         return ExtensionLoader.getExtensionLoader(Cluster.class).getExtension("mergeable");
     }
 
+    /**
+     *
+     * @param cluster 多个provider的话，内聚成一个{@link Cluster}
+     * @param registry 注册中心
+     * @param type 接口class
+     * @param url 服务提供方remote地址url
+     * @param <T>
+     * @return
+     */
     private <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
         RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);// 是一个NotifyListener
         directory.setRegistry(registry);
         directory.setProtocol(protocol);
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
+        // 构造consumer端的URL
         URL subscribeUrl = new URL(Constants.CONSUMER_PROTOCOL, parameters.remove(Constants.REGISTER_IP_KEY), 0, type.getName(), parameters);
         if (!Constants.ANY_VALUE.equals(url.getServiceInterface())
                 && url.getParameter(Constants.REGISTER_KEY, true)) {

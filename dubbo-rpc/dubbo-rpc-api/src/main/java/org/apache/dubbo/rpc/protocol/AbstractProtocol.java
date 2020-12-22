@@ -40,7 +40,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<String, Exporter<?>>();
 
-    //TODO SOFEREFENCE 包含这个protocol的所有Invoker
+    //TODO SOFEREFENCE 包含这个protocol的所有Invoker,通过当前协议refer,export的所有Invoker
     protected final Set<Invoker<?>> invokers = new ConcurrentHashSet<Invoker<?>>();
 
     protected static String serviceKey(URL url) {

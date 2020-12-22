@@ -134,6 +134,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         try {
             if (Constants.ANY_VALUE.equals(url.getServiceInterface())) {
                 String root = toRootPath();
+                // 获取当前consumer url下面对应的zookeeper的监听者，因为一个consumer url有多个NotifyListener,所以这里用map来维护
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                 if (listeners == null) {
                     zkListeners.putIfAbsent(url, new ConcurrentHashMap<NotifyListener, ChildListener>());
@@ -141,6 +142,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 }
                 ChildListener zkListener = listeners.get(listener);
                 if (zkListener == null) {
+                    // 根据传入的监听器NotifyListener从当前consumer url中获取对应的zookeeper监听者
                     listeners.putIfAbsent(listener, new ChildListener() {
                         @Override
                         public void childChanged(String parentPath, List<String> currentChilds) {
@@ -148,6 +150,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                                 child = URL.decode(child);
                                 if (!anyServices.contains(child)) {
                                     anyServices.add(child);
+                                    // 发生变更时，需要及时订阅
                                     subscribe(url.setPath(child).addParameters(Constants.INTERFACE_KEY, child,
                                             Constants.CHECK_KEY, String.valueOf(false)), listener);
                                 }
@@ -157,17 +160,19 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     zkListener = listeners.get(listener);
                 }
                 zkClient.create(root, false);
-                List<String> services = zkClient.addChildListener(root, zkListener);
+                List<String> services = zkClient.addChildListener(root, zkListener);// CuratorZookeeperClient
                 if (services != null && !services.isEmpty()) {
                     for (String service : services) {
                         service = URL.decode(service);
                         anyServices.add(service);
+                        // 当前listener监听一个service提供方
                         subscribe(url.setPath(service).addParameters(Constants.INTERFACE_KEY, service,
                                 Constants.CHECK_KEY, String.valueOf(false)), listener);
                     }
                 }
             } else {
                 List<URL> urls = new ArrayList<URL>();
+                // 在上一步（subscribe）设置
                 for (String path : toCategoriesPath(url)) {//为zk路径下当前接口的[providers,configurators,routers]设置监听者
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                     if (listeners == null) {
@@ -290,6 +295,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 if (provider.contains("://")) {
                     URL url = URL.valueOf(provider);
                     if (UrlUtils.isMatch(consumer, url)) {
+                        // 过滤出有效的url
                         urls.add(url);
                     }
                 }

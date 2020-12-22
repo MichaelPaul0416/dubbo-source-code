@@ -378,7 +378,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         if (isJvmRefer) {
             URL url = new URL(Constants.LOCAL_PROTOCOL, NetUtils.LOCALHOST, 0, interfaceClass.getName()).addParameters(map);
             // 本虚拟机调用
-            invoker = refprotocol.refer(interfaceClass, url);
+            invoker = refprotocol.refer(interfaceClass, url);// 委托协议，帮忙把这个接口代理出一个远程执行对象
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
             }

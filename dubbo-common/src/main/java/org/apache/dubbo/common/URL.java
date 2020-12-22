@@ -997,6 +997,11 @@ public /**final**/ class URL implements Serializable {
         return new URL(protocol, username, password, host, port, path, map);
     }
 
+    /**
+     * 可变数组长度必须是偶数，第一个为key1，第二个为value1，第三个为key2，第四个为value2 以此类推
+     * @param pairs
+     * @return
+     */
     public URL addParameters(String... pairs) {
         if (pairs == null || pairs.length == 0) {
             return this;
