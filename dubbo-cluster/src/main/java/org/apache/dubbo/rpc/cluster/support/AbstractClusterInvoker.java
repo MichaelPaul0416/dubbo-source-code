@@ -76,6 +76,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
 
     @Override
     public boolean isAvailable() {
+        // 委托给实际的Invoker判断
         Invoker<T> invoker = stickyInvoker;
         if (invoker != null) {
             return invoker.isAvailable();

@@ -52,6 +52,9 @@ public abstract class Proxy {
     };
     private static final AtomicLong PROXY_CLASS_COUNTER = new AtomicLong(0);
     private static final String PACKAGE_NAME = Proxy.class.getPackage().getName();
+    /**
+     * {@code Map<类加载器,Map<需要代理的接口名字拼接(多个的话用分号;串联),包装代理对象的虚引用{@link WeakReference}>>}
+     */
     private static final Map<ClassLoader, Map<String, Object>> ProxyCacheMap = new WeakHashMap<ClassLoader, Map<String, Object>>();
 
     private static final Object PendingGenerationMarker = new Object();
@@ -62,7 +65,7 @@ public abstract class Proxy {
     /**
      * Get proxy.
      *
-     * @param ics interface class array.
+     * @param ics interface class array. 要代理实现的接口类
      * @return Proxy instance.
      */
     public static Proxy getProxy(Class<?>... ics) {
@@ -143,12 +146,14 @@ public abstract class Proxy {
             Set<String> worked = new HashSet<String>();
             List<Method> methods = new ArrayList<Method>();
 
+            // 遍历所有的需要代理的接口
             for (int i = 0; i < ics.length; i++) {
                 if (!Modifier.isPublic(ics[i].getModifiers())) {
                     String npkg = ics[i].getPackage().getName();
                     if (pkg == null) {
                         pkg = npkg;
                     } else {
+                        // 如果有接口不是public的，并且不是来自同一个package，那就不允许实现代理proxy
                         if (!pkg.equals(npkg))
                             throw new IllegalArgumentException("non-public interfaces from different packages");
                     }
@@ -164,7 +169,7 @@ public abstract class Proxy {
                     int ix = methods.size();
                     Class<?> rt = method.getReturnType();
                     Class<?>[] pts = method.getParameterTypes();
-                    //开始构建当前接口的方法的方法体
+                    //开始构建当前接口的方法的方法体，本质都是调用InvocationHandler#invoker方法
                     StringBuilder code = new StringBuilder("Object[] args = new Object[").append(pts.length).append("];");
                     for (int j = 0; j < pts.length; j++)
                         code.append(" args[").append(j).append("] = ($w)$").append(j + 1).append(";");
@@ -181,7 +186,7 @@ public abstract class Proxy {
                 pkg = PACKAGE_NAME;
 
             // create ProxyInstance class.
-            String pcn = pkg + ".proxy" + id;
+            String pcn = pkg + ".proxy" + id;// 代理类的实际类名
             ccp.setClassName(pcn);
             ccp.addField("public static java.lang.reflect.Method[] methods;");
             ccp.addField("private " + InvocationHandler.class.getName() + " handler;");
@@ -196,6 +201,10 @@ public abstract class Proxy {
             ccm.setClassName(fcn);
             ccm.addDefaultConstructor();
             ccm.setSuperClass(Proxy.class);
+            /**
+             * {@link Proxy#newInstance(InvocationHandler)}的实现，所有的代理类都是{@link Proxy}的子类
+             * 并且实现了它的newInstance({@link InvocationHandler})方法
+             */
             ccm.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " h){ return new " + pcn + "($1); }");//这个类本身的newInstance是abstract的，所以这里使用javassist生成Proxy的代理类
             Class<?> pc = ccm.toClass();
             proxy = (Proxy) pc.newInstance();

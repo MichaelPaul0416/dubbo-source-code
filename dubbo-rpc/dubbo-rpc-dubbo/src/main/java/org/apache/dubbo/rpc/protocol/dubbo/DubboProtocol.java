@@ -417,7 +417,7 @@ public class DubboProtocol extends AbstractProtocol {
             }
 
             ExchangeClient exchangeClient = initClient(url);
-            client = new ReferenceCountExchangeClient(exchangeClient, ghostClientMap);// 装饰器模式，带技术功能的ExchangeClient
+            client = new ReferenceCountExchangeClient(exchangeClient, ghostClientMap);// 装饰器模式，带计数功能的ExchangeClient
             referenceClientMap.put(key, client);
             ghostClientMap.remove(key);
             locks.remove(key);

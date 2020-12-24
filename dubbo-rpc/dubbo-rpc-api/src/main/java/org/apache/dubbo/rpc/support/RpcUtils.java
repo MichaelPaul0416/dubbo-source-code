@@ -168,6 +168,11 @@ public class RpcUtils {
         return Boolean.TRUE.toString().equals(inv.getAttachment(Constants.FUTURE_KEY));
     }
 
+    /**
+     * 方法使用{@link AsyncFor}注解修饰 并且接口名是{@link Constants#ASYNC_SUFFIX}结尾并且返回值类型是{@link CompletableFuture}
+     * @param method
+     * @return
+     */
     public static boolean isAsyncFuture(Method method) {
         Class<?> clazz = method.getDeclaringClass();
         return clazz.isAnnotationPresent(AsyncFor.class) && method.getName().endsWith(Constants.ASYNC_SUFFIX) && method.getReturnType().equals(CompletableFuture.class);

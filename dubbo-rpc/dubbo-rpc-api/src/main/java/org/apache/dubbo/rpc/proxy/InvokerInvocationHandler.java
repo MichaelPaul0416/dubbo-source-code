@@ -35,6 +35,14 @@ public class InvokerInvocationHandler implements InvocationHandler {
         this.invoker = handler;
     }
 
+    /**
+     *
+     * @param proxy {@link org.apache.dubbo.common.bytecode.Proxy}生成的代理接口实现类
+     * @param method 目标方法
+     * @param args 目标入参
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
@@ -63,6 +71,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         } else {
             invocation = new RpcInvocation(method, args);
         }
+        // 开始真正执行Invoker的逻辑
         return invoker.invoke(invocation).recreate();
     }
 

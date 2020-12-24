@@ -78,9 +78,17 @@ public class ProtocolFilterWrapper implements Protocol {
                         return invoker.isAvailable();
                     }
 
+                    /**
+                     * 其实就是将下一个{@link Invoker}作为构造器的入参传入到这个匿名类中
+                     * 然后在{@link Invoker#invoke(Invocation)}方法中使用{@link Filter#invoke(Invoker, Invocation)}
+                     * 进行链式调用，传入的入参{@link Invoker}就是{@link Filter#invoke(Invoker, Invocation)}中的入参{@code Invoker}
+                     * @param invocation
+                     * @return
+                     * @throws RpcException
+                     */
                     @Override
                     public Result invoke(Invocation invocation) throws RpcException {
-                        // 当前Filter+当前Invoker
+                        // 当前Filter+当前Invoker，next是下一个Invoker，链式调用
                         return filter.invoke(next, invocation);
                     }
 
@@ -117,6 +125,7 @@ public class ProtocolFilterWrapper implements Protocol {
         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
             return protocol.refer(type, url);
         }
+        // RegistryProtocol#refer返回的Invoker
         return buildInvokerChain(protocol.refer(type, url), Constants.REFERENCE_FILTER_KEY, Constants.CONSUMER);
     }
 

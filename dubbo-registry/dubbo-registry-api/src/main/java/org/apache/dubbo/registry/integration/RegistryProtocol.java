@@ -347,6 +347,9 @@ public class RegistryProtocol implements Protocol {
             registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
                     Constants.CHECK_KEY, String.valueOf(false)));// 当前消费者的信息写入zk
         }
+        // 这一步通过委托Registry#subscribe方法，进行远程URL地址构建成Invoker的过程
+        // 总的过程就是获取注册中心上的remote地址，然后将其委托给对应的Protocol进行远程URL的refer，返回Invoker
+        // 最后将Protocol#refer返回的Invoker结果缓存在RegistryDirectory#Map中，key就是URL，value就是Invoker
         directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
                 Constants.PROVIDERS_CATEGORY
                         + "," + Constants.CONFIGURATORS_CATEGORY
@@ -355,7 +358,7 @@ public class RegistryProtocol implements Protocol {
         // cluster此处是一个adaptive对象，需要根据url(directory#getUrl)
         Invoker invoker = cluster.join(directory);// 一般cluster是一个wrapper类，这里是MockClusterWrapper
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
-        return invoker;
+        return invoker;// MockClusterInvoker
     }
 
     @Override
