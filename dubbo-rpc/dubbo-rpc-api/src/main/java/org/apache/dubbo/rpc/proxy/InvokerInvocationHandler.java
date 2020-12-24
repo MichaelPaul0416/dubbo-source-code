@@ -29,6 +29,10 @@ import java.lang.reflect.Method;
  */
 public class InvokerInvocationHandler implements InvocationHandler {
 
+    /**
+     * 这个Invoker其实就是{@link RegistryProtocol#refer}返回的{@link Invoker}
+     * 或者说是{@link Cluster#join}返回的{@link Invoker}
+     */
     private final Invoker<?> invoker;//对于client，每一个Protocol通过refer生成的Invoker，默认是DubboInvoker
 
     public InvokerInvocationHandler(Invoker<?> handler) {
