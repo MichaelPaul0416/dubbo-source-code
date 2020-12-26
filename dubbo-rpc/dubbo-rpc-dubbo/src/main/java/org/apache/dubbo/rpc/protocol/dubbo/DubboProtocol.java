@@ -212,6 +212,13 @@ public class DubboProtocol extends AbstractProtocol {
                         .equals(NetUtils.filterLocalHost(address.getAddress().getHostAddress()));// channel的ip和remote address的ip相等的话，说明是client
     }
 
+    /**
+     * 根据serviceKey找到对应的{@link Exporter},然后返回{@link Exporter#getInvoker()}
+     * @param channel
+     * @param inv
+     * @return
+     * @throws RemotingException
+     */
     Invoker<?> getInvoker(Channel channel, Invocation inv) throws RemotingException {
         boolean isCallBackServiceInvoke = false;
         boolean isStubServiceInvoke = false;

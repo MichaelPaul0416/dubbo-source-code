@@ -100,6 +100,11 @@ public class FutureFilter implements Filter {
         }
     }
 
+    /**
+     * 上下文中获取回调对象并且执行
+     * @param invoker
+     * @param invocation
+     */
     private void fireInvokeCallback(final Invoker<?> invoker, final Invocation invocation) {
         final Method onInvokeMethod = (Method) StaticContext.getSystemContext().get(StaticContext.getKey(invoker.getUrl(), invocation.getMethodName(), Constants.ON_INVOKE_METHOD_KEY));
         final Object onInvokeInst = StaticContext.getSystemContext().get(StaticContext.getKey(invoker.getUrl(), invocation.getMethodName(), Constants.ON_INVOKE_INSTANCE_KEY));
