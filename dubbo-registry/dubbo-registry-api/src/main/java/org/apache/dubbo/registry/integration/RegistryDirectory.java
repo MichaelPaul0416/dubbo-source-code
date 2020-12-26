@@ -404,6 +404,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                     }
                     if (enabled) {
                         // 此处真正根据协议构造对应的Invoker，根据rpc接口类型和远程provider的url构造一个代理对象Invoker
+                        // protocol#refer返回的一般是其包装类包装完之后的类型(ListenerInvokerWrapper)
+                        // 这些返回的Invoker会被缓存在Map中，辅助一个Directory的实际意义
                         invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {

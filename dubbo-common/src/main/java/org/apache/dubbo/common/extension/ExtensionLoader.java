@@ -196,6 +196,9 @@ public class ExtensionLoader<T> {
 
     /**
      * This is equivalent to {@code getActivateExtension(url, url.getParameter(key).split(","), null)}
+     * 获取{@link ExtensionLoader#type}的SPI接口实现
+     * 并且{@link Activate#group()}或者{@link Activate#value()}条件的SPI实现
+     * 最后返回
      *
      * @param url   url
      * @param key   url parameter key which used to get extension point names
@@ -222,9 +225,10 @@ public class ExtensionLoader<T> {
         List<String> names = values == null ? new ArrayList<String>(0) : Arrays.asList(values);
         if (!names.contains(Constants.REMOVE_VALUE_PREFIX + Constants.DEFAULT_KEY)) {
             getExtensionClasses();
-            for (Map.Entry<String, Activate> entry : cachedActivates.entrySet()) {
+            for (Map.Entry<String, Activate> entry : cachedActivates.entrySet()) {// loadClass的时候注入，也就是扫描SPI接口实现类的时候缓存
                 String name = entry.getKey();
                 Activate activate = entry.getValue();
+                // 遍历所有缓存的@Activate注解，过滤出当前group与Activate#group相符的SPI实现
                 if (isMatchGroup(group, activate.group())) {
                     T ext = getExtension(name);
                     if (!names.contains(name)
@@ -236,6 +240,7 @@ public class ExtensionLoader<T> {
             }
             Collections.sort(exts, ActivateComparator.COMPARATOR);
         }
+        // 再结合URL中的指定name获取SPI实现，加入到符合条件的列表中
         List<T> usrs = new ArrayList<T>();
         for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);

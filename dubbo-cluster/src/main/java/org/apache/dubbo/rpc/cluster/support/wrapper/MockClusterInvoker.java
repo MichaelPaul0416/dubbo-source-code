@@ -32,6 +32,11 @@ import org.apache.dubbo.rpc.support.MockInvoker;
 
 import java.util.List;
 
+/**
+ * 判断当前{@link Invoker}中的method是否需要被mock
+ * 根据不同的值执行对应的策略
+ * @param <T>
+ */
 public class MockClusterInvoker<T> implements Invoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(MockClusterInvoker.class);

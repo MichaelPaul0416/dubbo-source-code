@@ -60,6 +60,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         }
         // retry loop.
         RpcException le = null; // last exception.
+        // 为当前这个rpc请求筛选出一个Invoker，但是如果筛选出的Invoker不可用或者出现异常，那么就会被加入到这个列表中
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyinvokers.size()); // invoked invokers.
         Set<String> providers = new HashSet<String>(len);
         for (int i = 0; i < len; i++) {
@@ -67,11 +68,12 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
             if (i > 0) {
                 checkWhetherDestroyed();
-                copyinvokers = list(invocation);
+                copyinvokers = list(invocation);// 从Directory中根据Invocation筛选出的Invoker
                 // check again
                 checkInvokers(copyinvokers, invocation);
             }
             Invoker<T> invoker = select(loadbalance, invocation, copyinvokers, invoked);
+            // invoked不为空的条件就是前面有Invoker执行出现了异常
             invoked.add(invoker);
             RpcContext.getContext().setInvokers((List) invoked);
             try {
