@@ -544,6 +544,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                          * 新的URL是注册中心的URL返回的，所以协议是registry
                          */
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
+                        // 这个类会是rpc server最后执行的包装Invoker
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
                         // 将Invoker对象导出为Exporter对象，对外暴露；wrapperInvoker.getUrl().getProtocol()此时是registry

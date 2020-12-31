@@ -35,11 +35,20 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
         return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
     }
 
+    /**
+     *
+     * @param realObject 真正的Rpc接口实现类
+     * @param type Rpc接口类
+     * @param url
+     * @param <T>
+     * @return
+     */
     @Override
-    public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
+    public <T> Invoker<T> getInvoker(T realObject, Class<T> type, URL url) {
         // TODO Wrapper cannot handle this scenario correctly: the classname contains '$'
-        final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
-        return new AbstractProxyInvoker<T>(proxy, type, url) {
+        final Wrapper wrapper = Wrapper.getWrapper(realObject.getClass().getName().indexOf('$') < 0 ? realObject.getClass() : type);
+        // 给server端生成一个rpc接口实现类的代理
+        return new AbstractProxyInvoker<T>(realObject, type, url) {
             @Override
             protected Object doInvoke(T proxy, String methodName,
                                       Class<?>[] parameterTypes,

@@ -30,6 +30,9 @@ import java.lang.reflect.InvocationTargetException;
  */
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
+    /**
+     * 被代理的类，也就是实际的逻辑实现类
+     */
     private final T proxy;
 
     private final Class<T> type;
