@@ -1,9 +1,13 @@
 package com.wq.dubbo.rpc.api;
 
-import org.apache.dubbo.common.config.AsyncFor;
+import java.util.concurrent.CompletableFuture;
 
-@AsyncFor(value = DateTimeFinder.class)
 public interface DateTimeFinder {
 
     String currentTime(String format);
+
+    void hello(String kkk);
+
+    CompletableFuture<String> printTime(String tip);
+
 }

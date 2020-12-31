@@ -1,6 +1,8 @@
 package com.wq.dubbo.rpc;
 
+import com.wq.dubbo.rpc.api.AsyncService;
 import com.wq.dubbo.rpc.api.DateTimeFinder;
+import com.wq.dubbo.rpc.api.server.AsyncServiceImpl;
 import com.wq.dubbo.rpc.api.server.DefaultDateTimeFinder;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ProtocolConfig;
@@ -31,17 +33,26 @@ public class ApiRpcProvider {
         protocolConfig.setServer("netty4");
 
         // 重对象，封装了与注册中心的链接
-        ServiceConfig<DateTimeFinder> serviceConfig = new ServiceConfig<>();
-        serviceConfig.setApplication(appConfig);
-        serviceConfig.setRegistry(registryConfig);
-        serviceConfig.setProtocol(protocolConfig);
-        serviceConfig.setInterface(DateTimeFinder.class);
-        serviceConfig.setRef(finder);
-        serviceConfig.setVersion("1.0.0");
-
+        ServiceConfig<DateTimeFinder> serviceConfig = generateServiceConfig(finder, DateTimeFinder.class, appConfig, registryConfig, protocolConfig);
         serviceConfig.export();
+
+        AsyncService service = new AsyncServiceImpl();
+        ServiceConfig<AsyncService> asyncConfig = generateServiceConfig(service, AsyncService.class, appConfig, registryConfig, protocolConfig);
+        asyncConfig.export();
 
         while (true) {
         }
+    }
+
+    private static <T> ServiceConfig<T> generateServiceConfig(T instance, Class<T> inter,
+                                                              ApplicationConfig appConfig, RegistryConfig registryConfig, ProtocolConfig protocolConfig) {
+        ServiceConfig<T> serviceConfig = new ServiceConfig<>();
+        serviceConfig.setApplication(appConfig);
+        serviceConfig.setRegistry(registryConfig);
+        serviceConfig.setProtocol(protocolConfig);
+        serviceConfig.setInterface(inter);
+        serviceConfig.setRef(instance);
+        serviceConfig.setVersion("1.0.0");
+        return serviceConfig;
     }
 }

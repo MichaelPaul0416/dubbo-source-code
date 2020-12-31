@@ -24,12 +24,14 @@ import org.apache.dubbo.remoting.Endpoint;
 import org.apache.dubbo.remoting.RemotingException;
 
 /**
- * AbstractPeer
+ * AbstractPeer，具备send和receive和异常caught功能
+ * 处理通道中发生的一些事件
  */
 public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
     /**
      * 涉及到通道中数据传输的一些行为，都channelHandler处理
+     * dubbo自己封装的{@link ChannelHandler}不是Netty的ChannelHandler
      */
     private final ChannelHandler handler;
 

@@ -2,12 +2,14 @@ package com.wq.dubbo.rpc.api.server;
 
 import com.wq.dubbo.rpc.api.DateTimeFinder;
 import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.rpc.RpcContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 public class DefaultDateTimeFinder implements DateTimeFinder {
 
@@ -21,5 +23,30 @@ public class DefaultDateTimeFinder implements DateTimeFinder {
         logger.info("format:{}", f);
         DateFormat dateFormat = safeFormatter.get();
         return dateFormat.format(new Date());
+    }
+
+    @Override
+    public void hello(String kkk) {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("-------->" + kkk);
+    }
+
+    @Override
+    public CompletableFuture<String> printTime(String tip) {
+        RpcContext rpcContext = RpcContext.getContext();
+        System.out.println("Asyn --------> " + tip);
+        return CompletableFuture.supplyAsync(() -> {
+            System.out.println(rpcContext.getAttachments().values());
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return "async response from provider";
+        });
     }
 }
