@@ -26,8 +26,8 @@
                 超过了这个size就会再生成一个文件，这里的%i用来区分的
             %d{yyyy-MM-dd}会自动替代为日期，如2017-06-30
         -->
-        <RollingFile name="RollingFileInfo" fileName="/log/guitool_info.log"
-                     filePattern="/log/%d{yyyy-MM-dd}/guitool_%d{yyyy-MM-dd}_%i.log">
+        <RollingFile name="RollingFileInfo" fileName="./guitool_info.log"
+                     filePattern="./%d{yyyy-MM-dd}/guitool_%d{yyyy-MM-dd}_%i.log">
             <!-- 只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） -->
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             <!-- 输出的格式  -->
