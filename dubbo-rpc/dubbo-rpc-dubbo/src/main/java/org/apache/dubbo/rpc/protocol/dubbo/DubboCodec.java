@@ -173,6 +173,14 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
         encodeResponseData(channel, out, data, DUBBO_VERSION);
     }
 
+    /**
+     * 把{@link Invocation}——data的数据写到输出流中
+     * @param channel
+     * @param out 持有输出流的封装对象
+     * @param data
+     * @param version
+     * @throws IOException
+     */
     @Override
     protected void encodeRequestData(Channel channel, ObjectOutput out, Object data, String version) throws IOException {
         RpcInvocation inv = (RpcInvocation) data;

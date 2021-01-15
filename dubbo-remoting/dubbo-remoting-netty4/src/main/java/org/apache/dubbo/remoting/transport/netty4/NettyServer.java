@@ -65,6 +65,7 @@ public class NettyServer extends AbstractServer implements Server {
      *
      * @param url
      * @param handler 自定义的{@link ChannelHandler}或者说是{@link org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher}
+     *                DecodeHandler(HeaderExchangeHandler(ExchangeHandlerAdapter))
      * @throws RemotingException
      */
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {

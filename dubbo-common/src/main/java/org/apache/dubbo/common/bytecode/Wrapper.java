@@ -181,6 +181,7 @@ public abstract class Wrapper {
 
             c3.append(" ) { ");
 
+            // 如果接口的返回类型是Void 这里返回null
             if (m.getReturnType() == Void.TYPE)
                 c3.append(" w.").append(mn).append('(').append(args(m.getParameterTypes(), "$4")).append(");").append(" return null;");
             else

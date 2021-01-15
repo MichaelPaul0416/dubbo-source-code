@@ -53,7 +53,7 @@ public class ExchangeCodec extends TelnetCodec {
     protected static final int HEADER_LENGTH = 16;
     // magic header.
     protected static final short MAGIC = (short) 0xdabb;
-    protected static final byte MAGIC_HIGH = Bytes.short2bytes(MAGIC)[0];
+    protected static final byte MAGIC_HIGH = Bytes.short2bytes(MAGIC)[0];// 一个short是两个byte->0xda
     protected static final byte MAGIC_LOW = Bytes.short2bytes(MAGIC)[1];
     // message flag.
     protected static final byte FLAG_REQUEST = (byte) 0x80;
@@ -81,10 +81,19 @@ public class ExchangeCodec extends TelnetCodec {
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
         int readable = buffer.readableBytes();
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
-        buffer.readBytes(header);
+        buffer.readBytes(header);// 一次性读取消息头所有的字节,不足16的话读取16位
         return decode(channel, buffer, readable, header);
     }
 
+    /**
+     *
+     * @param channel NettyChannel，dubbo封装的channel对象
+     * @param buffer dubbo封装的数据容器
+     * @param readable 当前容器中所有可读的字节数
+     * @param header 消息头&gt;=16字节
+     * @return
+     * @throws IOException
+     */
     @Override
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
         // check magic number.
@@ -216,17 +225,17 @@ public class ExchangeCodec extends TelnetCodec {
         Bytes.short2bytes(MAGIC, header);
 
         // set request and serialization flag.
-        header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());
+        header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());// byte的最高位是1(0x80)，其余的都是标识contentTypeId
 
         if (req.isTwoWay()) header[2] |= FLAG_TWOWAY;
         if (req.isEvent()) header[2] |= FLAG_EVENT;
 
         // set request id.
-        Bytes.long2bytes(req.getId(), header, 4);
+        Bytes.long2bytes(req.getId(), header, 4);// 从第4个byte[index=4~index=11]开始，把req.getId的值塞入
 
         // encode request data.
         int savedWriteIndex = buffer.writerIndex();
-        buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);
+        buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);// ChannelBuffer数据容器从index=17开始写入数据
         ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
         ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
         if (req.isEvent()) {

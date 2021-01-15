@@ -29,6 +29,13 @@ public interface Codec2 {
     @Adaptive({Constants.CODEC_KEY})
     void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException;
 
+    /**
+     *
+     * @param channel {@code NettyChannel}
+     * @param buffer 持有{@code ByteBuf}的一个包装——基于netty4来说
+     * @return
+     * @throws IOException
+     */
     @Adaptive({Constants.CODEC_KEY})
     Object decode(Channel channel, ChannelBuffer buffer) throws IOException;
 

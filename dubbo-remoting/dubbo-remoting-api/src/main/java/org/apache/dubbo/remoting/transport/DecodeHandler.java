@@ -26,6 +26,9 @@ import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 
+/**
+ * 负责将rpc对象进一步解码为业务对象
+ */
 public class DecodeHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeHandler.class);

@@ -61,6 +61,13 @@ final class NettyCodecAdapter {
 
     private class InternalEncoder extends MessageToByteEncoder {
 
+        /**
+         *
+         * @param ctx
+         * @param msg
+         * @param out 新申请的数据容器，empty
+         * @throws Exception
+         */
         @Override
         protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
             org.apache.dubbo.remoting.buffer.ChannelBuffer buffer = new NettyBackedChannelBuffer(out);
@@ -74,6 +81,9 @@ final class NettyCodecAdapter {
         }
     }
 
+    /**
+     * dubbo消息的入口类，字节转成Message
+     */
     private class InternalDecoder extends ByteToMessageDecoder {
 
         @Override
