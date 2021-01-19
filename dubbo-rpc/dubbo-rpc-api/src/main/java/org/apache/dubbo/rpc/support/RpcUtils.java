@@ -183,6 +183,7 @@ public class RpcUtils {
         if (Boolean.FALSE.toString().equals(inv.getAttachment(Constants.RETURN_KEY))) {
             isOneway = true;
         } else {
+            // url中 ${methodName}.return = false
             isOneway = !url.getMethodParameter(getMethodName(inv), Constants.RETURN_KEY, true);
         }
         return isOneway;

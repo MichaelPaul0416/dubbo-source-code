@@ -9,6 +9,7 @@ import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.rpc.RpcContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +37,9 @@ public class ApiRpcConsumer {
         registryConfig.setPassword("");
         registryConfig.setProtocol("zookeeper");
 
-//        testDateTimeFinderSyncRpc(applicationConfig, registryConfig);
+        testDateTimeFinderSyncRpc(applicationConfig, registryConfig,true);
 
-        testWithAsyncRpcCall(applicationConfig, registryConfig);
+//        testWithAsyncRpcCall(applicationConfig, registryConfig);
     }
 
     private static void testWithAsyncRpcCall(ApplicationConfig applicationConfig, RegistryConfig registryConfig) {
@@ -60,7 +61,7 @@ public class ApiRpcConsumer {
 
         logger.info("call done and waiting for result");
 
-        while (!done){
+        while (!done) {
             try {
                 TimeUnit.MILLISECONDS.sleep(10);
             } catch (InterruptedException e) {
@@ -71,12 +72,13 @@ public class ApiRpcConsumer {
         logger.info("receive result from remote completely and shutdown now");
     }
 
-    private static void allDone(){
+    private static void allDone() {
         ApiRpcConsumer.done = true;
     }
 
     /**
      * 设置{@link ReferenceConfig#setAsync(Boolean)}
+     *
      * @param asyncConfig
      */
     private static void setRpcCallAsyn(ReferenceConfig<AsyncService> asyncConfig) {
@@ -85,6 +87,7 @@ public class ApiRpcConsumer {
 
     /**
      * 通过{@link MethodConfig}设置方法级别的参数
+     *
      * @param asyncConfig
      */
     private static void setAsyncWithMethodConfig(ReferenceConfig<AsyncService> asyncConfig) {
@@ -99,6 +102,7 @@ public class ApiRpcConsumer {
 
     /**
      * 异步调用的结果是{@link CompletableFuture}
+     *
      * @param asyncService
      */
     private static void getFutureFromCallReturn(AsyncService asyncService) {
@@ -107,7 +111,7 @@ public class ApiRpcConsumer {
             if (exception != null) {
                 exception.printStackTrace();
             } else {
-                logger.info("async response:{}",result);
+                logger.info("async response:{}", result);
             }
             allDone();
         });
@@ -115,6 +119,7 @@ public class ApiRpcConsumer {
 
     /**
      * 从{@link RpcContext#getContext()}获取当前上下文
+     *
      * @param asyncService
      */
     private static void getFutureFromContext(AsyncService asyncService) {
@@ -132,11 +137,22 @@ public class ApiRpcConsumer {
 
     /**
      * 同步功能调用测试
+     *
      * @param applicationConfig
      * @param registryConfig
+     * @param needOneWay
      */
-    private static void testDateTimeFinderSyncRpc(ApplicationConfig applicationConfig, RegistryConfig registryConfig) {
+    private static void testDateTimeFinderSyncRpc(ApplicationConfig applicationConfig, RegistryConfig registryConfig, boolean needOneWay) {
         ReferenceConfig<DateTimeFinder> dateConfig = configRefProvider(DateTimeFinder.class, applicationConfig, registryConfig);
+        if (needOneWay) {
+            // set method call mode
+            MethodConfig methodConfig = new MethodConfig();
+            methodConfig.setReturn(false);// oneway
+            methodConfig.setName("hello");
+            List<MethodConfig> methodConfigs = new ArrayList<>();
+            methodConfigs.add(methodConfig);
+            dateConfig.setMethods(methodConfigs);
+        }
         DateTimeFinder dateTimeFinder = dateConfig.get();
         logger.info(dateTimeFinder.currentTime("yyyyMMddHHmmss"));
         long start = System.currentTimeMillis();
@@ -146,6 +162,7 @@ public class ApiRpcConsumer {
 
     /**
      * 生成并且配置{@link ReferenceConfig}
+     *
      * @param cla
      * @param applicationConfig
      * @param registryConfig

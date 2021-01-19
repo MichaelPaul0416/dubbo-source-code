@@ -113,7 +113,7 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
             // decode request.
             Request req = new Request(id);
             req.setVersion(Version.getProtocolVersion());
-            req.setTwoWay((flag & FLAG_TWOWAY) != 0);
+            req.setTwoWay((flag & FLAG_TWOWAY) != 0);// 检查flag的次高位是否是1
             if ((flag & FLAG_EVENT) != 0) {
                 req.setEvent(Request.HEARTBEAT_EVENT);
             }
@@ -127,7 +127,7 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
                     DecodeableRpcInvocation inv;
                     if (channel.getUrl().getParameter(
                             Constants.DECODE_IN_IO_THREAD_KEY,
-                            Constants.DEFAULT_DECODE_IN_IO_THREAD)) {
+                            Constants.DEFAULT_DECODE_IN_IO_THREAD)) {// 是否在io线程中进行解码
                         inv = new DecodeableRpcInvocation(channel, req, is, proto);
                         inv.decode();
                     } else {

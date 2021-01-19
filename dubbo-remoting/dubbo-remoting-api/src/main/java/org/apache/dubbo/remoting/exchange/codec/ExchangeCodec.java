@@ -81,7 +81,7 @@ public class ExchangeCodec extends TelnetCodec {
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
         int readable = buffer.readableBytes();
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
-        buffer.readBytes(header);// 一次性读取消息头所有的字节,不足16的话读取16位
+        buffer.readBytes(header);// 读取最多16字节
         return decode(channel, buffer, readable, header);
     }
 
@@ -90,7 +90,7 @@ public class ExchangeCodec extends TelnetCodec {
      * @param channel NettyChannel，dubbo封装的channel对象
      * @param buffer dubbo封装的数据容器
      * @param readable 当前容器中所有可读的字节数
-     * @param header 消息头&gt;=16字节
+     * @param header 消息头&lt;=16字节
      * @return
      * @throws IOException
      */
@@ -98,16 +98,17 @@ public class ExchangeCodec extends TelnetCodec {
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
         // check magic number.
         if (readable > 0 && header[0] != MAGIC_HIGH
-                || readable > 1 && header[1] != MAGIC_LOW) {
+                || readable > 1 && header[1] != MAGIC_LOW) {// 说明此事包消息开头不是dubbo的包头，属于半包，之前的半包信息继续接收
             int length = header.length;
-            if (header.length < readable) {//不足的继续写入
+            if (header.length < readable) {//这里满足的条件就是，此时的消息包前面一部分为前一个dubbo消息的半包，然后又跟上了另外一个dubbo的消息，格式类似于(abc[0xdabb header 共16byte]def)
                 header = Bytes.copyOf(header, readable);//readable > HEADER_LENGTH(16)
-                buffer.readBytes(header, length, readable - length);
+                buffer.readBytes(header, length, readable - length);// 此时的header就是buffer里面的内容
             }
+            // 前面已经判断了，当前消息是半包，所以没必要从第一个byte开始判断是否是dubbo的魔数
             for (int i = 1; i < header.length - 1; i++) {//不从下标=0开始是因为，在最外面的if层判断已经确认了header[0] != MAGIC_HIGH
-                if (header[i] == MAGIC_HIGH && header[i + 1] == MAGIC_LOW) {
-                    buffer.readerIndex(buffer.readerIndex() - header.length + i);
-                    header = Bytes.copyOf(header, i);
+                if (header[i] == MAGIC_HIGH && header[i + 1] == MAGIC_LOW) {// 找到了当前buffer中的另外一条消息的包头，说明前面的都是前一条dubbo消息
+                    buffer.readerIndex(buffer.readerIndex() - header.length + i);// 把readIndex移动到当前这一条dubbo消息的包头位置
+                    header = Bytes.copyOf(header, i);// 截取上一条dubbo消息在本次buffer中剩余的部分
                     break;
                 }
             }

@@ -33,6 +33,7 @@ public class DefaultDateTimeFinder implements DateTimeFinder {
             e.printStackTrace();
         }
         System.out.println("-------->" + kkk);
+        throw new RuntimeException("throw exception while return type is void");
     }
 
     @Override

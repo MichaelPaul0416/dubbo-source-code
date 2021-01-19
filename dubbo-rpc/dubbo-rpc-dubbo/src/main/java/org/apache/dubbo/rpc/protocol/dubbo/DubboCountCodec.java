@@ -43,8 +43,9 @@ public final class DubboCountCodec implements Codec2 {
         int save = buffer.readerIndex();
         MultiMessage result = MultiMessage.create();
         do {
+            // 具体的协议编解码，将byte[] -> Object
             Object obj = codec.decode(channel, buffer);
-            if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {
+            if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {// 半包，需要继续接受
                 buffer.readerIndex(save);
                 break;
             } else {
